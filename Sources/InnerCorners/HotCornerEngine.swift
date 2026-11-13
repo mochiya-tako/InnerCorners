@@ -96,7 +96,7 @@ final class HotCornerEngine {
         case .requested:
             onStatus?(L10n.text(
                 language,
-                ja: "\(current.displayName)・\(current.corner.title(language: language))：\(action.title(language: language))の起動を要求",
+                ja: "\(current.displayName)・\(current.corner.title(language: language))：\(action.title(language: language))の実行を要求",
                 en: "\(current.displayName) · \(current.corner.title(language: language)): Requested \(action.title(language: language))"
             ))
         case .permissionRequired:

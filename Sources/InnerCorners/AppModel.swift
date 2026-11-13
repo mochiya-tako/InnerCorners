@@ -254,7 +254,7 @@ final class AppModel: ObservableObject {
         case .performed:
             status = text(ja: "テスト音を実行しました（キー送信なし）", en: "Test sound played (no keystrokes)")
         case .requested:
-            status = text(ja: "予期せず非同期の起動要求になりました", en: "The test unexpectedly returned an asynchronous launch request")
+            status = text(ja: "予期せず非同期の実行要求になりました", en: "The test unexpectedly returned an asynchronous action request")
         case .permissionRequired:
             status = text(ja: "予期せず権限が必要と判定されました", en: "Permission was unexpectedly reported as required")
         case .unsupported(let reason):
@@ -428,12 +428,12 @@ final class AppModel: ObservableObject {
             recordEvent("\(sourceName) → \(display.name) · \(corner): \(actionName)")
             diagnostic("Barrier action result: performed")
         case .requested:
-            status = text(ja: "\(display.name)・\(corner)：\(actionName)の起動を要求", en: "\(display.name) · \(corner): Requested \(actionName)")
+            status = text(ja: "\(display.name)・\(corner)：\(actionName)の実行を要求", en: "\(display.name) · \(corner): Requested \(actionName)")
             recordEvent(text(
-                ja: "\(sourceName) → \(display.name)・\(corner)：\(actionName)（起動要求）",
-                en: "\(sourceName) → \(display.name) · \(corner): \(actionName) (launch requested)"
+                ja: "\(sourceName) → \(display.name)・\(corner)：\(actionName)（実行要求）",
+                en: "\(sourceName) → \(display.name) · \(corner): \(actionName) (action requested)"
             ))
-            diagnostic("Barrier action result: launch requested")
+            diagnostic("Barrier action result: action requested")
         case .permissionRequired:
             status = text(ja: "アクセシビリティ権限が必要です", en: "Accessibility permission is required")
             recordEvent(text(ja: "\(sourceName) → \(display.name)・\(corner)：権限不足", en: "\(sourceName) → \(display.name) · \(corner): Permission required"))
