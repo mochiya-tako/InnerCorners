@@ -78,7 +78,7 @@ Dockが従来使用してきた修飾キービットは、CoreGraphicsのフラ�
 | 通知センター | Apple公式のFn／Globe＋NをCGEventで送る | Apple公式資料でショートカットを確認。送信処理はコンパイル済み、実発動は未確認 | Fn／Globe、外付けキーボード、他アプリとの競合 |
 | スクリーンセーバ開始 | Bundle ID `com.apple.ScreenSaver.Engine`をNSWorkspaceで解決して起動し、既知パスへフォールバック | macOS 27.0.1でアプリ、Bundle ID、パスを確認。起動処理は実装済み、実発動は未確認 | 旧OSでのBundle解決とパス差、解除後の安全再作動 |
 | ロック画面 | Apple公式のControl＋Command＋QをCGEventで送る | 送信処理は実装済み、実ロックは未確認 | 即時に操作セッションがロックされ、試験に手動解除が必要 |
-| ディスプレイスリープ | `/usr/bin/pmset displaysleepnow` | コマンドとman pageの説明を確認。未実行 | 公開APIではなくOSコマンドへの依存、復帰時の画面再認識 |
+| ディスプレイスリープ | `/usr/bin/pmset displaysleepnow` | コマンドとman pageの説明を確認。Foundation `Process`による起動処理は実装済み、未実行 | 公開APIではなくOSコマンドへの依存、復帰時の画面再認識 |
 | スクリーンセーバ無効化 | 公開IOKitの電源アサーション等を調査 | 未調査 | 標準ホットコーナーと同じ範囲だけを抑止できるか不明。状態型処理が必要 |
 
 `DesktopSettings.appex`自体は`_CoreDockGetExposeCornerActionsWithModifiers`および`_CoreDockSetExposeCornerActionWithModifier`を使用しているが、これは非公開CoreDock関数である。InnerCornersの公開向け実装には使用しない。

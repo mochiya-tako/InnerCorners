@@ -79,12 +79,18 @@ final class ActionExecutor {
             return openLaunchpadApplication(language: language)
         case .none:
             return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
-        case .disableScreenSaver, .putDisplayToSleep:
+        case .disableScreenSaver:
             return .unsupported(L10n.text(
                 language,
                 ja: "\(action.title(language: language))はまだ実装されていません",
                 en: "\(action.title(language: language)) is not implemented yet"
             ))
+        case .putDisplayToSleep:
+            return runSystemCommand(
+                at: "/usr/bin/pmset",
+                arguments: ["displaysleepnow"],
+                language: language
+            )
         case .startScreenSaver:
             return openScreenSaverApplication(language: language)
         case .notificationCenter:
@@ -219,6 +225,36 @@ final class ActionExecutor {
         // CGEvent posting has no completion callback. The request was posted,
         // but only the target system feature can confirm the visible result.
         return .requested
+    }
+
+    private func runSystemCommand(
+        at path: String,
+        arguments: [String],
+        language: AppLanguage
+    ) -> Result {
+        guard FileManager.default.isExecutableFile(atPath: path) else {
+            return .failed(L10n.text(
+                language,
+                ja: "必要なmacOSコマンドを実行できません",
+                en: "The required macOS command is not executable"
+            ))
+        }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            // Process launch is synchronous, but command completion is not.
+            return .requested
+        } catch {
+            return .failed(L10n.text(
+                language,
+                ja: "macOSコマンドを起動できませんでした：\(error.localizedDescription)",
+                en: "Could not launch the macOS command: \(error.localizedDescription)"
+            ))
+        }
     }
 
 }
