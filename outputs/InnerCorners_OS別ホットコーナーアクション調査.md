@@ -74,7 +74,7 @@ Dockが従来使用してきた修飾キービットは、CoreGraphicsのフラ�
 
 | アクション | 公開配布を想定した第一候補 | 現在の確認範囲 | 主なリスク |
 |---|---|---|---|
-| クイックメモ | macOS標準ショートカットをCGEventで送る | UI上の機能存在のみ確認 | Fn／Globe、キー配列、ショートカット変更 |
+| クイックメモ | Apple公式のFn／Globe＋QをCGEventで送る | Apple公式資料でショートカットを確認。送信処理はコンパイル済み、実発動は未確認 | Fn／Globe、外付けキーボード、ショートカット変更 |
 | 通知センター | ユーザーの標準ショートカットを読み、CGEventで送る | UI上の機能存在のみ確認 | ショートカット未設定、他アプリとの競合 |
 | スクリーンセーバ開始 | `ScreenSaverEngine.app`をNSWorkspaceで起動 | `/System/Library/CoreServices/ScreenSaverEngine.app`、Bundle ID `com.apple.ScreenSaver.Engine`を確認 | macOS 27用パスであり旧OSのパス差を要確認 |
 | ロック画面 | 標準のControl＋Command＋QをCGEventで送る | 未実行 | 即時に操作セッションがロックされ、試験に手動解除が必要 |

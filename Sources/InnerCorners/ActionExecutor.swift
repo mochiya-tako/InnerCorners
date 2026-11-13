@@ -75,12 +75,18 @@ final class ActionExecutor {
         case .none:
             return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
         case .startScreenSaver, .disableScreenSaver, .putDisplayToSleep,
-             .notificationCenter, .lockScreen, .quickNote:
+             .notificationCenter, .lockScreen:
             return .unsupported(L10n.text(
                 language,
                 ja: "\(action.title(language: language))はまだ実装されていません",
                 en: "\(action.title(language: language)) is not implemented yet"
             ))
+        case .quickNote:
+            return postKeyboardShortcut(
+                keyCode: 12,
+                flags: .maskSecondaryFn,
+                language: language
+            )
         case .unknown:
             return .unsupported(action.title(language: language))
         }
@@ -135,6 +141,39 @@ final class ActionExecutor {
         }
         // NSWorkspace completes asynchronously.  At this point the request was
         // accepted, but the target application has not yet reported success.
+        return .requested
+    }
+
+    private func postKeyboardShortcut(
+        keyCode: CGKeyCode,
+        flags: CGEventFlags,
+        language: AppLanguage
+    ) -> Result {
+        guard CGPreflightPostEventAccess() else {
+            return .permissionRequired
+        }
+        let source = CGEventSource(stateID: .combinedSessionState)
+        guard let keyDown = CGEvent(
+            keyboardEventSource: source,
+            virtualKey: keyCode,
+            keyDown: true
+        ), let keyUp = CGEvent(
+            keyboardEventSource: source,
+            virtualKey: keyCode,
+            keyDown: false
+        ) else {
+            return .failed(L10n.text(
+                language,
+                ja: "キーボードイベントを作成できませんでした",
+                en: "Could not create keyboard events"
+            ))
+        }
+        keyDown.flags = flags
+        keyUp.flags = flags
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
+        // CGEvent posting has no completion callback. The request was posted,
+        // but only the target system feature can confirm the visible result.
         return .requested
     }
 

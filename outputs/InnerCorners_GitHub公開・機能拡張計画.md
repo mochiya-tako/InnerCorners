@@ -150,6 +150,7 @@ Apple Developer Programへの加入やDeveloper ID証明書は不要。利用者
 - 所要：3～6時間
 - 候補：標準ショートカット。Fn／Globeの扱いとユーザー設定変更を調査する。
 - 完了条件：既存のクイックメモを開く場合と新規作成の場合を確認し、キー配列差で誤入力しない。
+- 現状：Apple公式仕様のFn／Globe＋Qを、公開CoreGraphics APIのキーイベントとして送る処理を実装。`CGPreflightPostEventAccess()`で送信権限を事前確認し、送信後は完了断定せず`requested`として扱う。Swift 6・macOS 14最低対象のコンパイルに合格。安定稼働中のv0.10.3には未導入で、実際のクイックメモ表示は未検証。
 
 ### P2-03 スクリーンセーバー開始
 
