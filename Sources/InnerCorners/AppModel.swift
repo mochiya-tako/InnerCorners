@@ -257,6 +257,10 @@ final class AppModel: ObservableObject {
             status = text(ja: "予期せず非同期の起動要求になりました", en: "The test unexpectedly returned an asynchronous launch request")
         case .permissionRequired:
             status = text(ja: "予期せず権限が必要と判定されました", en: "Permission was unexpectedly reported as required")
+        case .unsupported(let reason):
+            status = text(ja: "予期せず未対応と判定されました：\(reason)", en: "The test unexpectedly reported an unsupported action: \(reason)")
+        case .failed(let reason):
+            status = text(ja: "テストの実行に失敗しました：\(reason)", en: "The test failed: \(reason)")
         case .skipped(let reason):
             status = reason
         }
@@ -434,6 +438,23 @@ final class AppModel: ObservableObject {
             status = text(ja: "アクセシビリティ権限が必要です", en: "Accessibility permission is required")
             recordEvent(text(ja: "\(sourceName) → \(display.name)・\(corner)：権限不足", en: "\(sourceName) → \(display.name) · \(corner): Permission required"))
             diagnostic("Barrier action result: permission required")
+        case .unsupported(let reason):
+            status = "\(display.name) · \(corner): \(reason)"
+            recordEvent(text(
+                ja: "\(sourceName) → \(display.name)・\(corner)：未対応（\(reason)）",
+                en: "\(sourceName) → \(display.name) · \(corner): Unsupported (\(reason))"
+            ))
+            diagnostic("Barrier action result: unsupported - \(reason)")
+        case .failed(let reason):
+            status = text(
+                ja: "\(display.name)・\(corner)：実行失敗（\(reason)）",
+                en: "\(display.name) · \(corner): Action failed (\(reason))"
+            )
+            recordEvent(text(
+                ja: "\(sourceName) → \(display.name)・\(corner)：実行失敗（\(reason)）",
+                en: "\(sourceName) → \(display.name) · \(corner): Action failed (\(reason))"
+            ))
+            diagnostic("Barrier action result: failed - \(reason)")
         case .skipped(let reason):
             status = "\(display.name) · \(corner): \(reason)"
             recordEvent("\(sourceName) → \(display.name) · \(corner): \(reason)")

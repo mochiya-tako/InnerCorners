@@ -8,6 +8,8 @@ final class ActionExecutor {
         case performed
         case requested
         case permissionRequired
+        case unsupported(String)
+        case failed(String)
         case skipped(String)
     }
 
@@ -47,15 +49,8 @@ final class ActionExecutor {
         let suffix = preferenceSuffix(for: corner)
         let dock = UserDefaults(suiteName: "com.apple.dock")
         let modifier = dock?.integer(forKey: "wvous-\(suffix)-modifier") ?? 0
-        let action: String
-        switch dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0 {
-        case 2: action = "Mission Control"
-        case 3: action = L10n.text(language, ja: "アプリケーションウインドウ", en: "Application Windows")
-        case 4: action = L10n.text(language, ja: "デスクトップを表示", en: "Show Desktop")
-        case 11: action = L10n.text(language, ja: "アプリ", en: "Apps")
-        case 0: action = L10n.text(language, ja: "なし", en: "None")
-        default: action = L10n.text(language, ja: "未対応の標準アクション", en: "Unsupported macOS action")
-        }
+        let dockValue = dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0
+        let action = SystemHotCornerAction(dockValue: dockValue).title(language: language)
         return modifier == 0 ? action : L10n.text(language, ja: "\(action)（修飾キーあり・未対応）", en: "\(action) (modifier unsupported)")
     }
 
@@ -66,13 +61,28 @@ final class ActionExecutor {
         guard modifier == 0 else {
             return .skipped(L10n.text(language, ja: "標準ホットコーナーに修飾キーが設定されています", en: "The macOS Hot Corner uses a modifier key"))
         }
-        switch dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0 {
-        case 2: return runMissionControlDocklet(argument: nil, language: language)
-        case 3: return runMissionControlDocklet(argument: "2", language: language)
-        case 4: return runMissionControlDocklet(argument: "1", language: language)
-        case 11: return openLaunchpadApplication(language: language)
-        case 0: return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
-        default: return .skipped(L10n.text(language, ja: "このmacOS標準アクションは試作品では未対応です", en: "This macOS Hot Corner action is not supported yet"))
+        let dockValue = dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0
+        let action = SystemHotCornerAction(dockValue: dockValue)
+        switch action {
+        case .missionControl:
+            return runMissionControlDocklet(argument: nil, language: language)
+        case .applicationWindows:
+            return runMissionControlDocklet(argument: "2", language: language)
+        case .showDesktop:
+            return runMissionControlDocklet(argument: "1", language: language)
+        case .apps:
+            return openLaunchpadApplication(language: language)
+        case .none:
+            return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
+        case .startScreenSaver, .disableScreenSaver, .putDisplayToSleep,
+             .notificationCenter, .lockScreen, .quickNote:
+            return .unsupported(L10n.text(
+                language,
+                ja: "\(action.title(language: language))はまだ実装されていません",
+                en: "\(action.title(language: language)) is not implemented yet"
+            ))
+        case .unknown:
+            return .unsupported(action.title(language: language))
         }
     }
 
@@ -99,7 +109,7 @@ final class ActionExecutor {
             "/System/Applications/Launchpad.app"
         ]
         guard let path = candidates.first(where: FileManager.default.fileExists(atPath:)) else {
-            return .skipped(L10n.text(
+            return .failed(L10n.text(
                 language,
                 ja: "macOS標準アプリを見つけられません",
                 en: "The required macOS app was not found"
@@ -110,7 +120,7 @@ final class ActionExecutor {
 
     private func openDockletApplication(at path: String, arguments: [String], language: AppLanguage) -> Result {
         guard FileManager.default.fileExists(atPath: path) else {
-            return .skipped(L10n.text(language, ja: "macOS標準アプリを見つけられません", en: "The required macOS app was not found"))
+            return .failed(L10n.text(language, ja: "macOS標準アプリを見つけられません", en: "The required macOS app was not found"))
         }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.arguments = arguments

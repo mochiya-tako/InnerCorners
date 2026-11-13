@@ -101,6 +101,10 @@ final class HotCornerEngine {
             ))
         case .permissionRequired:
             onStatus?(L10n.text(language, ja: "アクセシビリティ権限が必要です", en: "Accessibility permission is required"))
+        case .unsupported(let reason):
+            onStatus?(reason)
+        case .failed(let reason):
+            onStatus?(L10n.text(language, ja: "実行失敗：\(reason)", en: "Action failed: \(reason)"))
         case .skipped(let reason):
             onStatus?(reason)
         }
