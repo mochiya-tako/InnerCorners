@@ -1,0 +1,16 @@
+# Swift/Xcode build products
+.build/
+.swiftpm/
+DerivedData/
+
+# Local probes, diagnostic bundles, caches, and backups
+work/
+
+# Generated releases and historical reports. Keep only the active plans.
+outputs/*
+!outputs/InnerCorners_GitHub公開・機能拡張計画.md
+!outputs/InnerCorners_OS別ホットコーナーアクション調査.md
+
+# macOS and local logs
+.DS_Store
+*.log
