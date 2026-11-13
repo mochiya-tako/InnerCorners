@@ -79,7 +79,7 @@ final class ActionExecutor {
             return openLaunchpadApplication(language: language)
         case .none:
             return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
-        case .disableScreenSaver, .putDisplayToSleep, .lockScreen:
+        case .disableScreenSaver, .putDisplayToSleep:
             return .unsupported(L10n.text(
                 language,
                 ja: "\(action.title(language: language))はまだ実装されていません",
@@ -91,6 +91,12 @@ final class ActionExecutor {
             return postKeyboardShortcut(
                 keyCode: VirtualKey.n,
                 flags: .maskSecondaryFn,
+                language: language
+            )
+        case .lockScreen:
+            return postKeyboardShortcut(
+                keyCode: VirtualKey.q,
+                flags: [.maskControl, .maskCommand],
                 language: language
             )
         case .quickNote:
