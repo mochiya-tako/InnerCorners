@@ -56,15 +56,48 @@ final class ActionExecutor {
         let modifier = dock?.integer(forKey: "wvous-\(suffix)-modifier") ?? 0
         let dockValue = dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0
         let action = SystemHotCornerAction(dockValue: dockValue).title(language: language)
-        return modifier == 0 ? action : L10n.text(language, ja: "\(action)（修飾キーあり・未対応）", en: "\(action) (modifier unsupported)")
+        guard modifier != 0 else { return action }
+        let requirement = SystemHotCornerModifier(dockValue: modifier)
+        if requirement.usesEmergencyOptionKey {
+            return L10n.text(
+                language,
+                ja: "\(action)（⌥は緊急通過を優先）",
+                en: "\(action) (⌥ is reserved for emergency bypass)"
+            )
+        }
+        return L10n.text(
+            language,
+            ja: "\(action)（必要キー：\(requirement.symbols(language: language))）",
+            en: "\(action) (requires \(requirement.symbols(language: language)))"
+        )
     }
 
     private func performSystemHotCorner(for corner: Corner, language: AppLanguage) -> Result {
         let suffix = preferenceSuffix(for: corner)
         let dock = UserDefaults(suiteName: "com.apple.dock")
         let modifier = dock?.integer(forKey: "wvous-\(suffix)-modifier") ?? 0
-        guard modifier == 0 else {
-            return .skipped(L10n.text(language, ja: "標準ホットコーナーに修飾キーが設定されています", en: "The macOS Hot Corner uses a modifier key"))
+        let modifierRequirement = SystemHotCornerModifier(dockValue: modifier)
+        if modifierRequirement.hasUnknownBits {
+            return .unsupported(L10n.text(
+                language,
+                ja: "未対応の修飾キー設定です（値：\(modifier)）",
+                en: "Unsupported modifier setting (value: \(modifier))"
+            ))
+        }
+        if modifierRequirement.usesEmergencyOptionKey {
+            return .unsupported(L10n.text(
+                language,
+                ja: "Optionキーは緊急通過を優先するため、アクション条件には使用できません",
+                en: "The Option key is reserved for emergency bypass and cannot trigger an action"
+            ))
+        }
+        let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+        guard modifierRequirement.matches(current: currentFlags) else {
+            return .skipped(L10n.text(
+                language,
+                ja: "必要な修飾キー（\(modifierRequirement.symbols(language: language))）が押されていません",
+                en: "Required modifier keys are not pressed (\(modifierRequirement.symbols(language: language)))"
+            ))
         }
         let dockValue = dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0
         let action = SystemHotCornerAction(dockValue: dockValue)
