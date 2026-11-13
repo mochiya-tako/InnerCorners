@@ -4,6 +4,11 @@ import CoreGraphics
 
 @MainActor
 final class ActionExecutor {
+    private enum VirtualKey {
+        static let q: CGKeyCode = 12
+        static let n: CGKeyCode = 45
+    }
+
     enum Result {
         case performed
         case requested
@@ -74,16 +79,21 @@ final class ActionExecutor {
             return openLaunchpadApplication(language: language)
         case .none:
             return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
-        case .startScreenSaver, .disableScreenSaver, .putDisplayToSleep,
-             .notificationCenter, .lockScreen:
+        case .startScreenSaver, .disableScreenSaver, .putDisplayToSleep, .lockScreen:
             return .unsupported(L10n.text(
                 language,
                 ja: "\(action.title(language: language))はまだ実装されていません",
                 en: "\(action.title(language: language)) is not implemented yet"
             ))
+        case .notificationCenter:
+            return postKeyboardShortcut(
+                keyCode: VirtualKey.n,
+                flags: .maskSecondaryFn,
+                language: language
+            )
         case .quickNote:
             return postKeyboardShortcut(
-                keyCode: 12,
+                keyCode: VirtualKey.q,
                 flags: .maskSecondaryFn,
                 language: language
             )
