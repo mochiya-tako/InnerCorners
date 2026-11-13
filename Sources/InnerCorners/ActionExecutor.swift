@@ -79,12 +79,14 @@ final class ActionExecutor {
             return openLaunchpadApplication(language: language)
         case .none:
             return .skipped(L10n.text(language, ja: "macOS標準設定は「なし」です", en: "The macOS Hot Corner is set to None"))
-        case .startScreenSaver, .disableScreenSaver, .putDisplayToSleep, .lockScreen:
+        case .disableScreenSaver, .putDisplayToSleep, .lockScreen:
             return .unsupported(L10n.text(
                 language,
                 ja: "\(action.title(language: language))はまだ実装されていません",
                 en: "\(action.title(language: language)) is not implemented yet"
             ))
+        case .startScreenSaver:
+            return openScreenSaverApplication(language: language)
         case .notificationCenter:
             return postKeyboardShortcut(
                 keyCode: VirtualKey.n,
@@ -134,15 +136,41 @@ final class ActionExecutor {
         return openDockletApplication(at: path, arguments: [], language: language)
     }
 
+    private func openScreenSaverApplication(language: AppLanguage) -> Result {
+        let bundleIdentifier = "com.apple.ScreenSaver.Engine"
+        let candidates = [
+            NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier),
+            URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app")
+        ]
+        guard let url = candidates.compactMap({ $0 }).first(where: {
+            FileManager.default.fileExists(atPath: $0.path)
+        }) else {
+            return .failed(L10n.text(
+                language,
+                ja: "macOSのスクリーンセーバアプリを見つけられません",
+                en: "The macOS screen saver application was not found"
+            ))
+        }
+        return openApplication(at: url, arguments: [], language: language)
+    }
+
     private func openDockletApplication(at path: String, arguments: [String], language: AppLanguage) -> Result {
         guard FileManager.default.fileExists(atPath: path) else {
             return .failed(L10n.text(language, ja: "macOS標準アプリを見つけられません", en: "The required macOS app was not found"))
         }
+        return openApplication(
+            at: URL(fileURLWithPath: path),
+            arguments: arguments,
+            language: language
+        )
+    }
+
+    private func openApplication(at url: URL, arguments: [String], language: AppLanguage) -> Result {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.arguments = arguments
         configuration.createsNewApplicationInstance = true
         NSWorkspace.shared.openApplication(
-            at: URL(fileURLWithPath: path),
+            at: url,
             configuration: configuration
         ) { _, error in
             if let error, ProcessInfo.processInfo.environment["INNERCORNERS_DIAGNOSTICS"] == "1" {

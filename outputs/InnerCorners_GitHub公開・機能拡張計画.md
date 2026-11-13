@@ -157,6 +157,7 @@ Apple Developer Programへの加入やDeveloper ID証明書は不要。利用者
 - 所要：3～6時間
 - 候補：公開されたシステムアプリ起動経路または安定した標準ショートカット。
 - 完了条件：開始、通常の入力による解除、解除後の安全な壁再開を確認する。
+- 現状：公開APIの`NSWorkspace`でBundle ID `com.apple.ScreenSaver.Engine`から解決し、既知のCoreServicesパスへフォールバックして非同期起動する処理を実装。完了を断定せず`requested`として扱う。Swift 6・macOS 14最低対象のコンパイルに合格。実際の開始・解除試験は未実施。
 
 ### P2-04 通知センター
 
