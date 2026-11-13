@@ -79,7 +79,12 @@ Dockが従来使用してきた修飾キービットは、CoreGraphicsのフラ�
 | スクリーンセーバ開始 | Bundle ID `com.apple.ScreenSaver.Engine`をNSWorkspaceで解決して起動し、既知パスへフォールバック | macOS 27.0.1でアプリ、Bundle ID、パスを確認。起動処理は実装済み、実発動は未確認 | 旧OSでのBundle解決とパス差、解除後の安全再作動 |
 | ロック画面 | Apple公式のControl＋Command＋QをCGEventで送る | 送信処理は実装済み、実ロックは未確認 | 即時に操作セッションがロックされ、試験に手動解除が必要 |
 | ディスプレイスリープ | `/usr/bin/pmset displaysleepnow` | コマンドとman pageの説明を確認。Foundation `Process`による起動処理は実装済み、未実行 | 公開APIではなくOSコマンドへの依存、復帰時の画面再認識 |
-| スクリーンセーバ無効化 | 公開IOKitの電源アサーション等を調査 | 未調査 | 標準ホットコーナーと同じ範囲だけを抑止できるか不明。状態型処理が必要 |
+| スクリーンセーバ無効化 | 安全な公開手段が確認できるまで未対応 | IOKit電源アサーションを調査したが、画面のアイドルスリープ抑止でありスクリーンセーバだけの抑止とは確認できない | 標準機能より広く省電力動作を妨げる、状態解除漏れ |
+
+Apple公開資料：
+
+- `kIOPMAssertionTypePreventUserIdleDisplaySleep`はディスプレイの自動減光・アイドルスリープを防ぐための電源アサーションである。スクリーンセーバだけを無効化するAPIとは説明されていない。<https://developer.apple.com/documentation/iokit/iopmlib_h/iopmassertiontypes>
+- `IOPMAssertionDeclareUserActivity`はユーザー活動を宣言し、ディスプレイスリープを先送りする。これもスクリーンセーバ専用の抑止ではない。<https://developer.apple.com/documentation/iokit/1557072-iopmcopyassertionsstatus>
 
 `DesktopSettings.appex`自体は`_CoreDockGetExposeCornerActionsWithModifiers`および`_CoreDockSetExposeCornerActionWithModifier`を使用しているが、これは非公開CoreDock関数である。InnerCornersの公開向け実装には使用しない。
 
