@@ -10,7 +10,18 @@ enum Corner: String, CaseIterable, Codable, Identifiable {
 }
 
 enum CornerAction: String, CaseIterable, Codable, Identifiable {
-    case systemHotCorner, none, missionControl, applicationWindows, showDesktop, launchpad, testNotification
+    case systemHotCorner
+    case none
+    case missionControl
+    case applicationWindows
+    case showDesktop
+    case launchpad
+    case quickNote
+    case notificationCenter
+    case lockScreen
+    case startScreenSaver
+    case putDisplayToSleep
+    case testNotification
 
     var id: String { rawValue }
 

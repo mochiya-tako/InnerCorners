@@ -50,6 +50,32 @@ final class ActionExecutor {
             return runMissionControlDocklet(argument: "1", language: language)
         case .launchpad:
             return openLaunchpadApplication(language: language)
+        case .quickNote:
+            return postKeyboardShortcut(
+                keyCode: VirtualKey.q,
+                flags: .maskSecondaryFn,
+                language: language
+            )
+        case .notificationCenter:
+            return postKeyboardShortcut(
+                keyCode: VirtualKey.n,
+                flags: .maskSecondaryFn,
+                language: language
+            )
+        case .lockScreen:
+            return postKeyboardShortcut(
+                keyCode: VirtualKey.q,
+                flags: [.maskControl, .maskCommand],
+                language: language
+            )
+        case .startScreenSaver:
+            return openScreenSaverApplication(language: language)
+        case .putDisplayToSleep:
+            return runSystemCommand(
+                at: "/usr/bin/pmset",
+                arguments: ["displaysleepnow"],
+                language: language
+            )
         }
     }
 

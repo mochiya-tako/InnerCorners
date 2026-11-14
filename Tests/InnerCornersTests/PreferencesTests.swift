@@ -38,4 +38,24 @@ final class PreferencesTests: XCTestCase {
         XCTAssertTrue(decoded.barrierEnabled)
         XCTAssertEqual(decoded.barrierLength, 40)
     }
+
+    func testNewPublicActionsRoundTripWithoutChangingLegacyAssignments() throws {
+        let actions: [CornerAction] = [
+            .quickNote,
+            .notificationCenter,
+            .lockScreen,
+            .startScreenSaver,
+            .putDisplayToSleep
+        ]
+
+        for action in actions {
+            var preferences = Preferences()
+            preferences.setAction(action, displayID: "display", corner: .bottomLeft)
+            let decoded = try JSONDecoder().decode(
+                Preferences.self,
+                from: JSONEncoder().encode(preferences)
+            )
+            XCTAssertEqual(decoded.action(displayID: "display", corner: .bottomLeft), action)
+        }
+    }
 }
