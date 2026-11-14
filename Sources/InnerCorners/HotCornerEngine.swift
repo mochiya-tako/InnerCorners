@@ -21,7 +21,16 @@ final class HotCornerEngine {
         }
     }
     var displays: [DisplayDescriptor] = [] {
-        didSet { rebuildZones() }
+        didSet {
+            guard !HotZoneGeometry.sameDisplayConfiguration(oldValue, displays) else { return }
+            rebuildZones()
+        }
+    }
+    var suppressedZoneIDs: Set<String> = [] {
+        didSet {
+            guard oldValue != suppressedZoneIDs else { return }
+            activationGate.reset()
+        }
     }
     var onStatus: ((String) -> Void)?
     var onHover: ((HotZone?) -> Void)?
@@ -94,7 +103,9 @@ final class HotCornerEngine {
             onHover?(current)
         }
 
-        switch safetyGate.decision(now: now, isOutsideActivationZone: current == nil) {
+        let actionableCurrent = current.flatMap { suppressedZoneIDs.contains($0.id) ? nil : $0 }
+
+        switch safetyGate.decision(now: now, isOutsideActivationZone: actionableCurrent == nil) {
         case .active:
             break
         case .bypassing, .rearmed:
@@ -120,8 +131,8 @@ final class HotCornerEngine {
         }
 
         let dwell = preferences.dwellMilliseconds / 1_000
-        guard let firedID = activationGate.update(zoneID: current?.id, now: now, dwell: dwell),
-              let current, current.id == firedID else { return }
+        guard let firedID = activationGate.update(zoneID: actionableCurrent?.id, now: now, dwell: dwell),
+              let current = actionableCurrent, current.id == firedID else { return }
         let action = preferences.action(displayID: current.displayID, corner: current.corner)
         let language = preferences.appLanguage
         let executionResult = executor.perform(action, zone: current, language: language)

@@ -3,6 +3,45 @@ import XCTest
 @testable import InnerCorners
 
 final class GeometryTests: XCTestCase {
+    func testEquivalentDisplayConfigurationIgnoresOrderingAndTransientDisplayNumbers() {
+        let first = [
+            DisplayDescriptor(id: "A", displayNumber: 1, name: "One", frame: CGRect(x: 0, y: 0, width: 100, height: 100)),
+            DisplayDescriptor(id: "B", displayNumber: 2, name: "Two", frame: CGRect(x: 100, y: 0, width: 100, height: 100))
+        ]
+        let reordered = [
+            DisplayDescriptor(id: "B", displayNumber: 9, name: "Renamed", frame: CGRect(x: 100, y: 0, width: 100, height: 100)),
+            DisplayDescriptor(id: "A", displayNumber: 8, name: "One", frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        ]
+
+        XCTAssertTrue(HotZoneGeometry.sameDisplayConfiguration(first, reordered))
+    }
+
+    func testChangedDisplayFrameIsNotEquivalent() {
+        let first = [DisplayDescriptor(id: "A", displayNumber: 1, name: "One", frame: CGRect(x: 0, y: 0, width: 100, height: 100))]
+        let changed = [DisplayDescriptor(id: "A", displayNumber: 1, name: "One", frame: CGRect(x: 1, y: 0, width: 100, height: 100))]
+
+        XCTAssertFalse(HotZoneGeometry.sameDisplayConfiguration(first, changed))
+    }
+
+    func testBarrierCoveredCornersAreSuppressedByPersistentDisplayID() {
+        let display = DisplayDescriptor(id: "persistent", displayNumber: 7, name: "One", frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let barrier = CursorBarrier(
+            id: "wall",
+            displayID: 7,
+            corner: .topLeft,
+            axis: .vertical,
+            coordinate: 0,
+            span: 0...40,
+            ownerSide: .higherCoordinate,
+            ownerFrame: display.frame
+        )
+
+        XCTAssertEqual(
+            HotZoneGeometry.zoneIDsCoveredByBarriers(displays: [display], barriers: [barrier]),
+            ["persistent:topLeft"]
+        )
+    }
+
     private let left = DisplayDescriptor(id: "left", displayNumber: 1, name: "Left", frame: CGRect(x: 0, y: 0, width: 1920, height: 1080))
     // Different heights, but aligned top edges: a common real multi-display arrangement.
     private let right = DisplayDescriptor(id: "right", displayNumber: 2, name: "Right", frame: CGRect(x: 1920, y: -360, width: 2560, height: 1440))

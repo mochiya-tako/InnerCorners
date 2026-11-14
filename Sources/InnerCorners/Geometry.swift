@@ -2,6 +2,30 @@ import CoreGraphics
 import Foundation
 
 enum HotZoneGeometry {
+    static func sameDisplayConfiguration(
+        _ lhs: [DisplayDescriptor],
+        _ rhs: [DisplayDescriptor]
+    ) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        return lhs.allSatisfy { display in
+            rhs.contains { $0.id == display.id && $0.frame == display.frame }
+        }
+    }
+
+    static func zoneIDsCoveredByBarriers(
+        displays: [DisplayDescriptor],
+        barriers: [CursorBarrier]
+    ) -> Set<String> {
+        let persistentIDByDisplayNumber = Dictionary(
+            uniqueKeysWithValues: displays.map { ($0.displayNumber, $0.id) }
+        )
+        return Set(barriers.compactMap { barrier in
+            persistentIDByDisplayNumber[barrier.displayID].map {
+                "\($0):\(barrier.corner.rawValue)"
+            }
+        })
+    }
+
     static func zones(for displays: [DisplayDescriptor], size requestedSize: CGFloat) -> [HotZone] {
         displays.flatMap { display in
             let size = min(max(requestedSize, 10), 100, display.frame.width, display.frame.height)
