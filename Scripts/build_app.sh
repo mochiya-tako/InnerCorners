@@ -8,7 +8,7 @@ APP_DIR="$BUILD_DIR/InnerCorners.app"
 RESOURCE_DIR="$APP_DIR/Contents/Resources"
 ICON_BUILD_DIR="$BUILD_DIR/generated-icons"
 VERIFY_DIR="$BUILD_DIR/verify"
-OUTPUT_ZIP="$PROJECT_DIR/outputs/InnerCorners-v0.11.0-rc.4-arm64.app.zip"
+OUTPUT_ZIP="$PROJECT_DIR/outputs/InnerCorners-v0.11.0-rc.5-arm64.app.zip"
 CACHE_DIR="$PROJECT_DIR/work/clang-cache"
 
 rm -rf "$BUILD_DIR"

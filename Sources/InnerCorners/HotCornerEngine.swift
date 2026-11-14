@@ -32,6 +32,7 @@ final class HotCornerEngine {
             activationGate.reset()
         }
     }
+    var internalZoneIDs: Set<String> = []
     var onStatus: ((String) -> Void)?
     var onHover: ((HotZone?) -> Void)?
 
@@ -134,6 +135,11 @@ final class HotCornerEngine {
         guard let firedID = activationGate.update(zoneID: actionableCurrent?.id, now: now, dwell: dwell),
               let current = actionableCurrent, current.id == firedID else { return }
         let action = preferences.action(displayID: current.displayID, corner: current.corner)
+        guard HotZoneGeometry.shouldExecuteCustomAction(
+            action,
+            zoneID: current.id,
+            internalZoneIDs: internalZoneIDs
+        ) else { return }
         let language = preferences.appLanguage
         let executionResult = executor.perform(action, zone: current, language: language)
         switch executionResult {

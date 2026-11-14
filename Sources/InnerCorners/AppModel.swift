@@ -513,13 +513,16 @@ final class AppModel: ObservableObject {
     private func refreshBarrier() {
         guard !isSleeping else { return }
         let activeQuartzDisplays = quartzDisplays.isEmpty ? DisplayProvider.currentQuartz() : quartzDisplays
-        let activeBarriers = preferences.barrierEnabled
-            ? CursorBarrierGeometry.barriers(for: activeQuartzDisplays, length: preferences.barrierLength)
-            : []
-        engine.suppressedZoneIDs = HotZoneGeometry.zoneIDsCoveredByBarriers(
-            displays: displays,
-            barriers: activeBarriers
+        let possibleBarriers = CursorBarrierGeometry.barriers(
+            for: activeQuartzDisplays,
+            length: preferences.barrierLength
         )
+        let internalZoneIDs = HotZoneGeometry.zoneIDsCoveredByBarriers(
+            displays: displays,
+            barriers: possibleBarriers
+        )
+        engine.internalZoneIDs = internalZoneIDs
+        engine.suppressedZoneIDs = preferences.barrierEnabled ? internalZoneIDs : []
         barrierController.update(
             enabled: preferences.barrierEnabled,
             length: preferences.barrierLength,

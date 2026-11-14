@@ -42,6 +42,30 @@ final class GeometryTests: XCTestCase {
         )
     }
 
+    func testSystemActionAtOuterCornerIsLeftToMacOS() {
+        XCTAssertFalse(HotZoneGeometry.shouldExecuteCustomAction(
+            .systemHotCorner,
+            zoneID: "display:bottomLeft",
+            internalZoneIDs: []
+        ))
+    }
+
+    func testSystemActionAtInternalCornerIsExecutedByCustomEngine() {
+        XCTAssertTrue(HotZoneGeometry.shouldExecuteCustomAction(
+            .systemHotCorner,
+            zoneID: "display:bottomLeft",
+            internalZoneIDs: ["display:bottomLeft"]
+        ))
+    }
+
+    func testExplicitCustomActionAtOuterCornerStillExecutes() {
+        XCTAssertTrue(HotZoneGeometry.shouldExecuteCustomAction(
+            .missionControl,
+            zoneID: "display:bottomLeft",
+            internalZoneIDs: []
+        ))
+    }
+
     private let left = DisplayDescriptor(id: "left", displayNumber: 1, name: "Left", frame: CGRect(x: 0, y: 0, width: 1920, height: 1080))
     // Different heights, but aligned top edges: a common real multi-display arrangement.
     private let right = DisplayDescriptor(id: "right", displayNumber: 2, name: "Right", frame: CGRect(x: 1920, y: -360, width: 2560, height: 1440))

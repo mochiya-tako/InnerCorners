@@ -26,6 +26,14 @@ enum HotZoneGeometry {
         })
     }
 
+    static func shouldExecuteCustomAction(
+        _ action: CornerAction,
+        zoneID: String,
+        internalZoneIDs: Set<String>
+    ) -> Bool {
+        action != .systemHotCorner || internalZoneIDs.contains(zoneID)
+    }
+
     static func zones(for displays: [DisplayDescriptor], size requestedSize: CGFloat) -> [HotZone] {
         displays.flatMap { display in
             let size = min(max(requestedSize, 10), 100, display.frame.width, display.frame.height)
