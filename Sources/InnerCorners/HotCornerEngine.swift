@@ -1,4 +1,5 @@
 import AppKit
+import CoreGraphics
 import Foundation
 import OSLog
 
@@ -9,6 +10,7 @@ final class HotCornerEngine {
     private var timer: Timer?
     private var zones: [HotZone] = []
     private var activationGate = ActivationGate()
+    private var safetyGate = ActivationSafetyGate()
     private var lastHoverZoneID: String?
     private var isSettingsVisible = false
 
@@ -31,6 +33,21 @@ final class HotCornerEngine {
     func setSettingsVisible(_ visible: Bool) {
         isSettingsVisible = visible
         reconcilePollingState()
+    }
+
+    func suspendForSleep() {
+        safetyGate.suspend()
+        activationGate.reset()
+    }
+
+    func prepareForWake(delay: TimeInterval = 5) {
+        safetyGate.prepareForRearm(now: ProcessInfo.processInfo.systemUptime, delay: delay)
+        activationGate.reset()
+    }
+
+    func prepareForDisplayChange(delay: TimeInterval = 5) {
+        safetyGate.prepareForRearm(now: ProcessInfo.processInfo.systemUptime, delay: delay)
+        activationGate.reset()
     }
 
     private func reconcilePollingState() {
@@ -76,7 +93,22 @@ final class HotCornerEngine {
             lastHoverZoneID = current?.id
             onHover?(current)
         }
+
+        switch safetyGate.decision(now: now, isOutsideActivationZone: current == nil) {
+        case .active:
+            break
+        case .bypassing, .rearmed:
+            activationGate.reset()
+            return
+        }
         guard preferences.isEnabled else {
+            activationGate.reset()
+            return
+        }
+
+        // Option is the emergency escape for the cursor barrier. Suppress the
+        // companion action too, so bypassing a corner never launches anything.
+        guard !CGEventSource.flagsState(.combinedSessionState).contains(.maskAlternate) else {
             activationGate.reset()
             return
         }

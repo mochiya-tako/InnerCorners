@@ -235,12 +235,36 @@ enum CursorBarrierGeometry {
             // frame check prevents a nearby point on another display from
             // manufacturing a contact for the wrong owner.
             guard containsClosed(barrier.ownerFrame, previous) else { continue }
+            guard approachesBoundary(from: previous, to: proposed, barrier: barrier) else { continue }
             return CursorBarrierCollision(
                 point: clampToOwnerDisplay(junction, barrier: barrier, inset: inset),
                 barrier: barrier
             )
         }
         return nil
+    }
+
+    private static func approachesBoundary(
+        from previous: CGPoint,
+        to proposed: CGPoint,
+        barrier: CursorBarrier
+    ) -> Bool {
+        let start: CGFloat
+        let end: CGFloat
+        switch barrier.axis {
+        case .vertical:
+            start = previous.x
+            end = proposed.x
+        case .horizontal:
+            start = previous.y
+            end = proposed.y
+        }
+        switch barrier.ownerSide {
+        case .higherCoordinate:
+            return end <= start
+        case .lowerCoordinate:
+            return end >= start
+        }
     }
 
     private static func contains(_ value: CGFloat, in span: ClosedRange<CGFloat>, padding: CGFloat) -> Bool {

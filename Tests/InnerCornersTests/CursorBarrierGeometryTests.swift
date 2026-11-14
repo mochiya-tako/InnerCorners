@@ -94,6 +94,19 @@ final class CursorBarrierGeometryTests: XCTestCase {
         ))
     }
 
+    func testMovementAwayFromBoundaryWithinToleranceDoesNotCreateCornerContact() {
+        let barriers = CursorBarrierGeometry.barriers(for: [lg, asm], length: 88)
+        let lgVerticalWall = barriers.filter {
+            $0.displayID == 1 && $0.corner == .topLeft && $0.axis == .vertical
+        }
+
+        XCTAssertNil(CursorBarrierGeometry.cornerContact(
+            from: CGPoint(x: 0.5, y: 1.2),
+            to: CGPoint(x: 0.8, y: 0.8),
+            barriers: lgVerticalWall
+        ))
+    }
+
     func testSparseFastSamplesJustBeyondSpanCannotTunnelIntoCorner() {
         let barriers = CursorBarrierGeometry.barriers(for: [lg, asm], length: 88)
         let result = CursorBarrierGeometry.collision(

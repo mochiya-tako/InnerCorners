@@ -322,8 +322,11 @@ final class AppModel: ObservableObject {
                     self.barrierController.stop(preservingSafetyState: true)
                 case .geometryChange:
                     if !CursorBarrierGeometry.sameDisplayConfiguration(self.quartzDisplays, newQuartz) {
-                        self.barrierController.prepareForDisplayChange()
-                        self.barrierController.stop(preservingSafetyState: true)
+                        self.engine.prepareForDisplayChange()
+                        if self.preferences.barrierEnabled {
+                            self.barrierController.prepareForDisplayChange()
+                            self.barrierController.stop(preservingSafetyState: true)
+                        }
                     }
                 case .none:
                     break
@@ -340,6 +343,7 @@ final class AppModel: ObservableObject {
     private func handleWake() {
         guard isSleeping else { return }
         isSleeping = false
+        engine.prepareForWake()
         guard preferences.barrierEnabled else {
             scheduleDisplayRefresh(after: 1.0)
             return
@@ -367,10 +371,6 @@ final class AppModel: ObservableObject {
 
     private func handleDisplayChange() {
         guard !isSleeping else { return }
-        guard preferences.barrierEnabled else {
-            scheduleDisplayRefresh()
-            return
-        }
         // Mission Control and App Exposé temporarily report an empty or
         // transitional display list. Do not pause from the notification-time
         // snapshot: doing so opens a pass-through gap immediately after the
@@ -386,6 +386,7 @@ final class AppModel: ObservableObject {
         screenRefreshWorkItem = nil
         screenRefreshGeneration += 1
         pendingBarrierRefreshMode = .none
+        engine.suspendForSleep()
         barrierController.stop()
         barrierCount = 0
         barrierStatus = text(ja: "接合部バリア：画面スリープ中（安全停止）", en: "Junction Barrier: Displays asleep (safe stop)")
