@@ -312,6 +312,8 @@ Apple Developer Programへの加入やDeveloper ID証明書は不要。利用者
 
 2026-11-14、RC7 (54)を実機導入し、3画面の複数内部コーナーで壁停止とShow Desktop、Mission Control、Application Windows、Appsの発火を確認。統合ログでは画面1〜3の進入元と角が対応する`trigger=barrier`・`result=requested`として記録され、RC6からの基本動作回帰は確認されなかった。
 
+同日、ASM-156UCをMi TVへミラーリングしてLGとの2論理画面構成を実機確認。重複`displayNumber`によるクラッシュや第3画面への誤発火は発生せず、画面調整に伴う複数の構成変更通知では毎回安全停止から5秒＋安全位置確認後に壁を再開した。画面1・2の接合部でShow Desktop、Mission Control、Apps、クイックメモ、通知センターが正しい進入元・対象画面として記録された。
+
 ## 6. バージョン案
 
 - v0.10.x：現行機能の不具合修正のみ
