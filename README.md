@@ -167,6 +167,7 @@ swift build -c release
 - 同日、上にLG 2560×1080、下に1920×1080を左右2台並べたT字配置を実機確認。LGの左右下角、下左画面の右上、下右画面の左上で壁停止と発火を確認。下2画面とLG下辺が交わる同一点でも、画面3の`topRight`はApplication Windows、画面2の`topLeft`はShow Desktopとして別々に記録され、LGの左右下角を含め画面所有の混同なし
 - 同日、3画面T字配置でLG左下からMission Control、下段画面右上からApplication Windowsを実発火し、どちらも全画面へ展開されることを目視確認。表示範囲・挙動はmacOS標準ホットコーナーと同じで、InnerCorners固有の別画面表示や不発なし
 - v0.11.0 RC7 (54)では、ミラーリング等の過渡状態で同一`displayNumber`が重複しても`zoneIDsCoveredByBarriers`がクラッシュしないよう、先頭の永続IDを採用する重複キー防御と回帰テストを追加。公開用ソースZIPは`outputs/`を除外し、必要文書をASCII名の`docs/`へ収録する専用スクリプトで生成
+- 2026-11-14、RC7 (54)を実機導入し、3画面の複数内部コーナーで壁停止とShow Desktop、Mission Control、Application Windows、Appsの発火を確認。統合ログでは画面1〜3の各進入元・角が対応する`trigger=barrier`と`result=requested`として記録され、基本動作に回帰なし
 - スクリーンセーバ無効化は、安全な公開APIで標準機能と同等の範囲だけを抑止できると確認できないため未実装を維持
 
 ## 未検証事項

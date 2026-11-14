@@ -310,6 +310,8 @@ Apple Developer Programへの加入やDeveloper ID証明書は不要。利用者
 
 外部レビューで、`zoneIDsCoveredByBarriers`の`Dictionary(uniqueKeysWithValues:)`がミラーリング等の重複`displayNumber`でトラップし得る点と、日本語ファイル名を含むソースZIPの`/usr/bin/unzip`互換性が指摘された。RC7 (54)では辞書生成を`uniquingKeysWith:`へ変更して先頭IDを採用する回帰テストを追加し、公開用ソースZIPから`outputs/`を除外して必要文書をASCII名の`docs/`へ収録する専用生成スクリプトを追加した。
 
+2026-11-14、RC7 (54)を実機導入し、3画面の複数内部コーナーで壁停止とShow Desktop、Mission Control、Application Windows、Appsの発火を確認。統合ログでは画面1〜3の進入元と角が対応する`trigger=barrier`・`result=requested`として記録され、RC6からの基本動作回帰は確認されなかった。
+
 ## 6. バージョン案
 
 - v0.10.x：現行機能の不具合修正のみ
