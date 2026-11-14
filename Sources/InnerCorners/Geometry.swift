@@ -17,7 +17,8 @@ enum HotZoneGeometry {
         barriers: [CursorBarrier]
     ) -> Set<String> {
         let persistentIDByDisplayNumber = Dictionary(
-            uniqueKeysWithValues: displays.map { ($0.displayNumber, $0.id) }
+            displays.map { ($0.displayNumber, $0.id) },
+            uniquingKeysWith: { first, _ in first }
         )
         return Set(barriers.compactMap { barrier in
             persistentIDByDisplayNumber[barrier.displayID].map {

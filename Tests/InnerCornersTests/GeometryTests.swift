@@ -42,6 +42,39 @@ final class GeometryTests: XCTestCase {
         )
     }
 
+    func testDuplicateDisplayNumbersDoNotTrapWhileResolvingBarrierCoverage() {
+        let first = DisplayDescriptor(
+            id: "first",
+            displayNumber: 7,
+            name: "Mirrored One",
+            frame: CGRect(x: 0, y: 0, width: 100, height: 100)
+        )
+        let duplicate = DisplayDescriptor(
+            id: "duplicate",
+            displayNumber: 7,
+            name: "Mirrored Two",
+            frame: CGRect(x: 0, y: 0, width: 100, height: 100)
+        )
+        let barrier = CursorBarrier(
+            id: "wall",
+            displayID: 7,
+            corner: .topLeft,
+            axis: .vertical,
+            coordinate: 0,
+            span: 0...40,
+            ownerSide: .higherCoordinate,
+            ownerFrame: first.frame
+        )
+
+        XCTAssertEqual(
+            HotZoneGeometry.zoneIDsCoveredByBarriers(
+                displays: [first, duplicate],
+                barriers: [barrier]
+            ),
+            ["first:topLeft"]
+        )
+    }
+
     func testSystemActionAtOuterCornerIsLeftToMacOS() {
         XCTAssertFalse(HotZoneGeometry.shouldExecuteCustomAction(
             .systemHotCorner,

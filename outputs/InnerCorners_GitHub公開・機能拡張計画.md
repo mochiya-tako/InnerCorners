@@ -308,6 +308,8 @@ Apple Developer Programへの加入やDeveloper ID証明書は不要。利用者
 
 同日、3画面T字配置でMission ControlとApplication Windowsの最終表示を目視確認し、いずれもmacOS標準ホットコーナーと同じく全画面へ展開された。発火元の画面所有判定は統合ログと一致し、InnerCorners固有の表示先異常は確認されなかった。
 
+外部レビューで、`zoneIDsCoveredByBarriers`の`Dictionary(uniqueKeysWithValues:)`がミラーリング等の重複`displayNumber`でトラップし得る点と、日本語ファイル名を含むソースZIPの`/usr/bin/unzip`互換性が指摘された。RC7 (54)では辞書生成を`uniquingKeysWith:`へ変更して先頭IDを採用する回帰テストを追加し、公開用ソースZIPから`outputs/`を除外して必要文書をASCII名の`docs/`へ収録する専用生成スクリプトを追加した。
+
 ## 6. バージョン案
 
 - v0.10.x：現行機能の不具合修正のみ
