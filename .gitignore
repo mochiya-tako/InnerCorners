@@ -5,6 +5,7 @@ DerivedData/
 
 # Local probes, diagnostic bundles, caches, and backups
 work/
+backups/
 
 # Generated releases and historical reports. Keep only the active plans.
 outputs/*

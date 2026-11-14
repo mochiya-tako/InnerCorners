@@ -16,6 +16,8 @@ final class AppModel: ObservableObject {
             engine.preferences = preferences
             if oldValue.appLanguage != preferences.appLanguage {
                 relocalizeState()
+            } else if oldValue.isEnabled != preferences.isEnabled {
+                updateMonitoringStatus()
             }
             refreshBarrier()
             save()
@@ -530,6 +532,10 @@ final class AppModel: ObservableObject {
         if frontmostApplicationName == "不明" || frontmostApplicationName == "Unknown" {
             frontmostApplicationName = text(ja: "不明", en: "Unknown")
         }
+        updateMonitoringStatus()
+    }
+
+    private func updateMonitoringStatus() {
         status = preferences.isEnabled
             ? text(ja: "監視中（\(displays.count)画面）", en: "Monitoring (\(displays.count) displays)")
             : text(ja: "停止中", en: "Stopped")
