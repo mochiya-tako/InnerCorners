@@ -1,8 +1,10 @@
 import AppKit
 import Foundation
+import OSLog
 
 @MainActor
 final class HotCornerEngine {
+    private let actionLogger = Logger(subsystem: "local.prototype.InnerCorners", category: "Action")
     private let executor: ActionExecutor
     private var timer: Timer?
     private var zones: [HotZone] = []
@@ -90,7 +92,8 @@ final class HotCornerEngine {
               let current, current.id == firedID else { return }
         let action = preferences.action(displayID: current.displayID, corner: current.corner)
         let language = preferences.appLanguage
-        switch executor.perform(action, zone: current, language: language) {
+        let executionResult = executor.perform(action, zone: current, language: language)
+        switch executionResult {
         case .performed:
             onStatus?("\(current.displayName) · \(current.corner.title(language: language)): \(action.title(language: language))")
         case .requested:
@@ -108,5 +111,12 @@ final class HotCornerEngine {
         case .skipped(let reason):
             onStatus?(reason)
         }
+        let displayNumber = displays.first(where: { $0.id == current.displayID })?.displayNumber ?? 0
+        let loggedAction = action == .systemHotCorner
+            ? executor.systemHotCornerDescription(for: current.corner, language: .english)
+            : action.rawValue
+        actionLogger.notice(
+            "trigger=zone sourceDisplay=\(displayNumber) targetDisplay=\(displayNumber) corner=\(current.corner.rawValue, privacy: .public) action=\(loggedAction, privacy: .public) result=\(executionResult.diagnosticCode, privacy: .public)"
+        )
     }
 }

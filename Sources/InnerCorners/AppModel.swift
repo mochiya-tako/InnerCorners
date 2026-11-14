@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import Foundation
+import OSLog
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -33,6 +34,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var recentEvents: [String] = []
 
     private let storageKey = "InnerCorners.preferences.v1"
+    private let actionLogger = Logger(subsystem: "local.prototype.InnerCorners", category: "Action")
     private let executor = ActionExecutor()
     private let barrierController = CursorBarrierController()
     private let emergencyHotKeyController = EmergencyHotKeyController()
@@ -406,6 +408,13 @@ final class AppModel: ObservableObject {
     private func performBarrierAction(_ barrier: CursorBarrier, sourceDisplayID: UInt32) {
         guard let display = displays.first(where: { $0.displayNumber == barrier.displayID }) else {
             status = text(ja: "壁に対応する画面設定を取得できません", en: "Could not find display settings for the barrier")
+            logBarrierAction(
+                sourceDisplayID: sourceDisplayID,
+                targetDisplayID: barrier.displayID,
+                corner: barrier.corner,
+                action: "unresolved",
+                result: "display-not-found"
+            )
             diagnostic("Barrier action: display \(barrier.displayID) not found")
             recordEvent(text(ja: "画面\(sourceDisplayID) → 不明な壁\(barrier.displayID)", en: "Display \(sourceDisplayID) → unknown barrier \(barrier.displayID)"))
             return
@@ -422,7 +431,11 @@ final class AppModel: ObservableObject {
         )
         let corner = cornerTitle(barrier.corner)
         let actionName = actionTitle(action)
-        switch executor.perform(action, zone: zone, language: language) {
+        let loggedAction = action == .systemHotCorner
+            ? executor.systemHotCornerDescription(for: barrier.corner, language: .english)
+            : action.rawValue
+        let executionResult = executor.perform(action, zone: zone, language: language)
+        switch executionResult {
         case .performed:
             status = text(ja: "\(display.name)・\(corner)：\(actionName)を実行", en: "\(display.name) · \(corner): Ran \(actionName)")
             recordEvent("\(sourceName) → \(display.name) · \(corner): \(actionName)")
@@ -460,6 +473,25 @@ final class AppModel: ObservableObject {
             recordEvent("\(sourceName) → \(display.name) · \(corner): \(reason)")
             diagnostic("Barrier action result: skipped - \(reason)")
         }
+        logBarrierAction(
+            sourceDisplayID: sourceDisplayID,
+            targetDisplayID: barrier.displayID,
+            corner: barrier.corner,
+            action: loggedAction,
+            result: executionResult.diagnosticCode
+        )
+    }
+
+    private func logBarrierAction(
+        sourceDisplayID: UInt32,
+        targetDisplayID: UInt32,
+        corner: Corner,
+        action: String,
+        result: String
+    ) {
+        actionLogger.notice(
+            "trigger=barrier sourceDisplay=\(sourceDisplayID) targetDisplay=\(targetDisplayID) corner=\(corner.rawValue, privacy: .public) action=\(action, privacy: .public) result=\(result, privacy: .public)"
+        )
     }
 
     private func recordEvent(_ message: String) {

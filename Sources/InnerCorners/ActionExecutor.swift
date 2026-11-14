@@ -16,6 +16,17 @@ final class ActionExecutor {
         case unsupported(String)
         case failed(String)
         case skipped(String)
+
+        var diagnosticCode: String {
+            switch self {
+            case .performed: "performed"
+            case .requested: "requested"
+            case .permissionRequired: "permission-required"
+            case .unsupported: "unsupported"
+            case .failed: "failed"
+            case .skipped: "skipped"
+            }
+        }
     }
 
     func perform(_ action: CornerAction, zone: HotZone, language: AppLanguage) -> Result {
