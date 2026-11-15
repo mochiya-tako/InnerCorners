@@ -6,13 +6,14 @@
 
 | Download | ダウンロード | Link |
 | --- | --- | --- |
-| App releases | アプリ配布版 | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
+| Latest RC app — Apple Silicon | 最新RCアプリ — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
+| All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
 | Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
 
 > [!IMPORTANT]
-> No public app binary has been released yet. RC7 is ad-hoc signed and has not been notarized or tested on another Mac. When a distributable build is ready, its ZIP and release notes will be published on the GitHub Releases page above.
+> RC7 is a pre-release for testing. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
 >
-> 一般向けのアプリ本体はまだ公開していません。RC7はアドホック署名で、公証および別のMacでの動作確認も未完了です。配布可能なビルドが完成した時点で、上記GitHub ReleasesにZIPとリリースノートを掲載します。
+> RC7は試用向けのプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
 
 ## English
 
