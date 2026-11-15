@@ -2,6 +2,18 @@
 
 [English](#english) | [日本語](#日本語)
 
+## Download / ダウンロード
+
+| Download | ダウンロード | Link |
+| --- | --- | --- |
+| App releases | アプリ配布版 | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
+| Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
+
+> [!IMPORTANT]
+> No public app binary has been released yet. RC7 is ad-hoc signed and has not been notarized or tested on another Mac. When a distributable build is ready, its ZIP and release notes will be published on the GitHub Releases page above.
+>
+> 一般向けのアプリ本体はまだ公開していません。RC7はアドホック署名で、公証および別のMacでの動作確認も未完了です。配布可能なビルドが完成した時点で、上記GitHub ReleasesにZIPとリリースノートを掲載します。
+
 ## English
 
 InnerCorners is an experimental macOS menu bar app that makes the inner corners of multi-display layouts behave more like native outer hot corners. It places short, directional cursor barriers at display junctions and can run a separate action for each display and corner.
