@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import Foundation
 import OSLog
+import UniformTypeIdentifiers
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -19,23 +20,34 @@ final class AppModel: ObservableObject {
             } else if oldValue.isEnabled != preferences.isEnabled {
                 updateMonitoringStatus()
             }
+            refreshFrontmostSuppressionState()
             refreshBarrier()
-            save()
+            scheduleSave()
         }
     }
     @Published private(set) var displays: [DisplayDescriptor] = []
+    @Published var selectedSettingsTab: SettingsTab = .cornersAndLayout
+    @Published var selectedDisplayID: String?
+    @Published var selectedCorner: Corner = .topLeft
+    @Published private(set) var previewBarrierSegments: [BarrierPreviewSegment] = []
+    @Published private(set) var lastHitBarrierID: String?
     @Published private(set) var status = "停止中"
     @Published private(set) var pointerStatus = "角の反応領域外"
     @Published private(set) var hoveredZoneID: String?
     @Published private(set) var accessibilityGranted = false
     @Published private(set) var cursorControlActive = false
     @Published private(set) var frontmostApplicationName = "不明"
+    @Published private(set) var frontmostApplicationBundleID: String?
+    @Published private(set) var isFrontmostAppFullscreen = false
+    @Published private(set) var isCompanionAppRunning = false
+    @Published private(set) var pausedUntil: Date?
     @Published private(set) var barrierStatus = "接合部バリア：停止中"
     @Published private(set) var barrierCount = 0
     @Published private(set) var emergencyHotKeyStatus = "緊急終了キー：未登録"
     @Published private(set) var recentEvents: [String] = []
 
     private let storageKey = "InnerCorners.preferences.v1"
+    private let companionBundleIdentifier = "local.prototype.InnerCorners"
     private let actionLogger = Logger(subsystem: "local.prototype.InnerCorners", category: "Action")
     private let executor = ActionExecutor()
     private let barrierController = CursorBarrierController()
@@ -43,20 +55,49 @@ final class AppModel: ObservableObject {
     private lazy var engine = HotCornerEngine(executor: executor)
     private var screenObserver: NSObjectProtocol?
     private var activeObserver: NSObjectProtocol?
+    private var terminateObserver: NSObjectProtocol?
     private var workspaceObserver: NSObjectProtocol?
+    private var spaceObserver: NSObjectProtocol?
+    private var appLaunchObserver: NSObjectProtocol?
+    private var appTerminateObserver: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
     private var screensWakeObserver: NSObjectProtocol?
     private var sleepObserver: NSObjectProtocol?
     private var screensSleepObserver: NSObjectProtocol?
     private var screenRefreshWorkItem: DispatchWorkItem?
+    private var saveWorkItem: DispatchWorkItem?
+    private var pauseTimerWorkItem: DispatchWorkItem?
+    private var hitHighlightWorkItem: DispatchWorkItem?
     private var screenRefreshGeneration = 0
     private var pendingBarrierRefreshMode = BarrierRefreshMode.none
     private var isSleeping = false
+    private var isSettingsWindowVisible = false
     private var quartzDisplays: [QuartzDisplayDescriptor] = []
     private var emptyDisplayRetryCount = 0
     private var emergencyHotKeyRegistered = false
 
     var language: AppLanguage { preferences.appLanguage }
+
+    var suppressionState: AppSuppressionState {
+        AppSuppressionPolicy.evaluate(
+            now: Date(),
+            pausedUntil: pausedUntil,
+            frontmostBundleID: frontmostApplicationBundleID,
+            isFrontmostFullscreen: isFrontmostAppFullscreen,
+            preferences: preferences
+        )
+    }
+
+    var isTemporarilyPaused: Bool {
+        pausedUntil.map { $0 > Date() } ?? false
+    }
+
+    var isFrontmostAppExcluded: Bool {
+        guard let bundleID = frontmostApplicationBundleID, !bundleID.isEmpty else { return false }
+        return preferences.excludedBundleIdentifiers.contains {
+            $0.caseInsensitiveCompare(bundleID) == .orderedSame
+        }
+    }
 
     func text(ja: String, en: String) -> String {
         L10n.text(language, ja: ja, en: en)
@@ -70,9 +111,17 @@ final class AppModel: ObservableObject {
         preferences.appLanguage = language
     }
 
+    func selectCorner(displayID: String, corner: Corner) {
+        selectedDisplayID = displayID
+        selectedCorner = corner
+    }
+
     init() {
         if let data = UserDefaults.standard.data(forKey: storageKey),
            let decoded = try? JSONDecoder().decode(Preferences.self, from: data) {
+            preferences = decoded
+        } else if let legacyData = UserDefaults(suiteName: "local.prototype.InnerCorners")?.data(forKey: storageKey),
+                  let decoded = try? JSONDecoder().decode(Preferences.self, from: legacyData) {
             preferences = decoded
         } else {
             preferences = Preferences()
@@ -87,6 +136,22 @@ final class AppModel: ObservableObject {
         }
         barrierController.onBarrierCount = { [weak self] count in
             self?.barrierCount = count
+        }
+        barrierController.onBarrierHit = { [weak self] barrier in
+            guard let self, self.isSettingsWindowVisible else { return }
+            if self.lastHitBarrierID != barrier.id {
+                self.lastHitBarrierID = barrier.id
+            }
+            self.hitHighlightWorkItem?.cancel()
+            let item = DispatchWorkItem { [weak self] in
+                MainActor.assumeIsolated {
+                    if self?.lastHitBarrierID == barrier.id {
+                        self?.lastHitBarrierID = nil
+                    }
+                }
+            }
+            self.hitHighlightWorkItem = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: item)
         }
         barrierController.onCollision = { [weak self] barrier, sourceDisplayID in
             self?.performBarrierAction(barrier, sourceDisplayID: sourceDisplayID)
@@ -117,6 +182,7 @@ final class AppModel: ObservableObject {
         relocalizeState()
         refreshDisplays()
         refreshPermissionStatus()
+        refreshCompanionAppStatus()
         refreshFrontmostApplication()
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
@@ -132,12 +198,40 @@ final class AppModel: ObservableObject {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.handleApplicationActivation() }
         }
+        terminateObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.flushSave() }
+        }
         workspaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.refreshFrontmostApplication() }
+        }
+        spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshFrontmostApplication() }
+        }
+        appLaunchObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didLaunchApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshCompanionAppStatus() }
+        }
+        appTerminateObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didTerminateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshCompanionAppStatus() }
         }
         wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification,
@@ -173,9 +267,16 @@ final class AppModel: ObservableObject {
 
     isolated deinit {
         screenRefreshWorkItem?.cancel()
+        saveWorkItem?.cancel()
+        pauseTimerWorkItem?.cancel()
+        hitHighlightWorkItem?.cancel()
         if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
         if let activeObserver { NotificationCenter.default.removeObserver(activeObserver) }
+        if let terminateObserver { NotificationCenter.default.removeObserver(terminateObserver) }
         if let workspaceObserver { NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver) }
+        if let spaceObserver { NSWorkspace.shared.notificationCenter.removeObserver(spaceObserver) }
+        if let appLaunchObserver { NSWorkspace.shared.notificationCenter.removeObserver(appLaunchObserver) }
+        if let appTerminateObserver { NSWorkspace.shared.notificationCenter.removeObserver(appTerminateObserver) }
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
         if let screensWakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(screensWakeObserver) }
         if let sleepObserver { NSWorkspace.shared.notificationCenter.removeObserver(sleepObserver) }
@@ -188,8 +289,150 @@ final class AppModel: ObservableObject {
         preferences.setAction(action, displayID: displayID, corner: corner)
     }
 
+    func setBarrierPolicy(_ policy: CornerBarrierPolicy, displayID: String, corner: Corner) {
+        preferences.setBarrierPolicy(policy, displayID: displayID, corner: corner)
+    }
+
+    func setModifierRequirement(_ requirement: CornerModifierRequirement, displayID: String, corner: Corner) {
+        preferences.setModifierRequirement(requirement, displayID: displayID, corner: corner)
+    }
+
+    func setCustomApplicationPath(_ path: String?, displayID: String, corner: Corner) {
+        preferences.setCustomApplicationPath(path, displayID: displayID, corner: corner)
+    }
+
+    func setCustomShortcutName(_ name: String?, displayID: String, corner: Corner) {
+        preferences.setCustomShortcutName(name, displayID: displayID, corner: corner)
+    }
+
+    func chooseCustomApplication(displayID: String, corner: Corner) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.applicationBundle]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.prompt = text(ja: "選択", en: "Choose")
+        if panel.runModal() == .OK, let url = panel.url {
+            preferences.setCustomApplicationPath(url.path, displayID: displayID, corner: corner)
+        }
+    }
+
+    func chooseExcludedApplication() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.applicationBundle]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.prompt = text(ja: "除外に追加", en: "Add to Excluded")
+        if panel.runModal() == .OK,
+           let url = panel.url,
+           let bundleID = Bundle(url: url)?.bundleIdentifier {
+            addExcludedBundleIdentifier(bundleID)
+        }
+    }
+
+    func toggleFrontmostAppExclusion() {
+        guard let bundleID = frontmostApplicationBundleID, !bundleID.isEmpty else { return }
+        if isFrontmostAppExcluded {
+            removeExcludedBundleIdentifier(bundleID)
+        } else {
+            addExcludedBundleIdentifier(bundleID)
+        }
+    }
+
+    func addExcludedBundleIdentifier(_ bundleID: String) {
+        let trimmed = bundleID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard !preferences.excludedBundleIdentifiers.contains(where: {
+            $0.caseInsensitiveCompare(trimmed) == .orderedSame
+        }) else { return }
+        preferences.excludedBundleIdentifiers.append(trimmed)
+    }
+
+    func removeExcludedBundleIdentifier(_ bundleID: String) {
+        preferences.excludedBundleIdentifiers.removeAll {
+            $0.caseInsensitiveCompare(bundleID) == .orderedSame
+        }
+    }
+
+    func pauseForMinutes(_ minutes: Double = 5) {
+        pauseTimerWorkItem?.cancel()
+        let deadline = Date().addingTimeInterval(max(10, minutes * 60))
+        pausedUntil = deadline
+        refreshFrontmostSuppressionState()
+        refreshBarrier()
+        recordEvent(text(
+            ja: "一時停止：\(Int(minutes))分間バリアとアクションを一時停止しました",
+            en: "Temporary pause: paused barriers and actions for \(Int(minutes)) minutes"
+        ))
+        let item = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                self?.resumeFromTemporaryPause()
+            }
+        }
+        pauseTimerWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(10, minutes * 60), execute: item)
+    }
+
+    func resumeFromTemporaryPause() {
+        pauseTimerWorkItem?.cancel()
+        pauseTimerWorkItem = nil
+        guard pausedUntil != nil else { return }
+        pausedUntil = nil
+        refreshFrontmostSuppressionState()
+        refreshBarrier()
+        recordEvent(text(
+            ja: "一時停止を解除しました",
+            en: "Resumed from temporary pause"
+        ))
+    }
+
     func setSettingsVisible(_ visible: Bool) {
+        isSettingsWindowVisible = visible
         engine.setSettingsVisible(visible)
+        if visible {
+            refreshCompanionAppStatus()
+            refreshFrontmostApplication()
+        } else {
+            hitHighlightWorkItem?.cancel()
+            hitHighlightWorkItem = nil
+            if lastHitBarrierID != nil {
+                lastHitBarrierID = nil
+            }
+        }
+    }
+
+    func terminateCompanionApp() {
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let apps = NSRunningApplication.runningApplications(withBundleIdentifier: companionBundleIdentifier)
+            .filter { $0.processIdentifier != currentPID && !$0.isTerminated }
+        for app in apps {
+            app.terminate()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            MainActor.assumeIsolated {
+                self?.refreshCompanionAppStatus()
+            }
+        }
+        recordEvent(text(
+            ja: "競合防止：同時起動していた ChatGPT版 InnerCorners.app に終了を要求しました",
+            en: "Conflict prevention: requested termination of concurrently running ChatGPT InnerCorners.app"
+        ))
+    }
+
+    private func refreshCompanionAppStatus() {
+        guard Bundle.main.bundleIdentifier != companionBundleIdentifier else {
+            isCompanionAppRunning = false
+            return
+        }
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: companionBundleIdentifier)
+            .contains { $0.processIdentifier != currentPID && !$0.isTerminated }
+        if isCompanionAppRunning != running {
+            isCompanionAppRunning = running
+        }
     }
 
     func action(displayID: String, corner: Corner) -> CornerAction {
@@ -200,12 +443,68 @@ final class AppModel: ObservableObject {
         preferences.barrierAction(displayID: displayID, corner: corner)
     }
 
+    func barrierPolicy(displayID: String, corner: Corner) -> CornerBarrierPolicy {
+        preferences.barrierPolicy(displayID: displayID, corner: corner)
+    }
+
+    func modifierRequirement(displayID: String, corner: Corner) -> CornerModifierRequirement {
+        preferences.modifierRequirement(displayID: displayID, corner: corner)
+    }
+
+    func customApplicationPath(displayID: String, corner: Corner) -> String? {
+        preferences.customApplicationPath(displayID: displayID, corner: corner)
+    }
+
+    func customShortcutName(displayID: String, corner: Corner) -> String? {
+        preferences.customShortcutName(displayID: displayID, corner: corner)
+    }
+
     func effectiveActionDescription(displayID: String, corner: Corner) -> String {
-        let action = preferences.barrierAction(displayID: displayID, corner: corner)
-        if action == .systemHotCorner {
-            return "macOS: \(executor.systemHotCornerDescription(for: corner, language: language))"
+        let assignment = preferences.assignment(displayID: displayID, corner: corner)
+        switch assignment.barrierPolicy {
+        case .disabled:
+            return text(ja: "壁なし（この角は自由に通過できます）", en: "No barrier (pointer passes freely through this corner)")
+        case .stopperOnly:
+            return text(ja: "ストッパー専用（壁で止まりますがアクションは発火しません）", en: "Stopper only (stops pointer without firing an action)")
+        case .enabled:
+            break
         }
-        return text(ja: "個別設定：\(actionTitle(action))", en: "Custom: \(actionTitle(action))")
+        let modSuffix = assignment.modifierRequirement == .none
+            ? ""
+            : text(ja: "（必要キー：\(assignment.modifierRequirement.symbols)）", en: " (requires \(assignment.modifierRequirement.symbols))")
+        let action = assignment.action
+        if action == .systemHotCorner {
+            return "macOS: \(executor.systemHotCornerDescription(for: corner, language: language))\(modSuffix)"
+        }
+        if action == .openApplication {
+            let appName = assignment.customApplicationPath.map { URL(fileURLWithPath: $0).deletingPathExtension().lastPathComponent }
+                ?? text(ja: "未選択", en: "Not selected")
+            return text(ja: "アプリ起動：\(appName)\(modSuffix)", en: "Open App: \(appName)\(modSuffix)")
+        }
+        if action == .runShortcut {
+            let name = (assignment.customShortcutName?.isEmpty == false)
+                ? assignment.customShortcutName!
+                : text(ja: "未指定", en: "Not specified")
+            return text(ja: "ショートカット：\(name)\(modSuffix)", en: "Shortcut: \(name)\(modSuffix)")
+        }
+        return text(ja: "個別設定：\(actionTitle(action))\(modSuffix)", en: "Custom: \(actionTitle(action))\(modSuffix)")
+    }
+
+    func shortCornerBadge(displayID: String, corner: Corner) -> String {
+        let assignment = preferences.assignment(displayID: displayID, corner: corner)
+        switch assignment.barrierPolicy {
+        case .disabled:
+            return text(ja: "通過", en: "Pass")
+        case .stopperOnly:
+            return text(ja: "壁のみ", en: "Stop")
+        case .enabled:
+            let prefix = assignment.modifierRequirement == .none ? "" : "\(assignment.modifierRequirement.symbols)"
+            let action = assignment.action
+            if action == .systemHotCorner {
+                return "\(prefix)\(executor.systemHotCornerDescription(for: corner, language: language))"
+            }
+            return "\(prefix)\(actionTitle(action))"
+        }
     }
 
     var versionDescription: String {
@@ -221,11 +520,12 @@ final class AppModel: ObservableObject {
 
     func copyDiagnostics() {
         var lines = [
-            "InnerCorners \(versionDescription)",
+            "InnerCorners Gemini Edition \(versionDescription)",
             ProcessInfo.processInfo.operatingSystemVersionString,
             "accessibility=\(accessibilityGranted)",
             "eventTapActive=\(cursorControlActive)",
-            "barrierEnabled=\(preferences.barrierEnabled) barrierCount=\(barrierCount) length=\(Int(preferences.barrierLength))",
+            "barrierEnabled=\(preferences.barrierEnabled) barrierCount=\(barrierCount) length=\(Int(preferences.barrierLength)) mode=\(preferences.passThroughMode.rawValue)",
+            "paused=\(isTemporarilyPaused) fullscreenApp=\(isFrontmostAppFullscreen) excludedApp=\(isFrontmostAppExcluded)",
             "displays=\(displays.count)"
         ]
         lines.append(contentsOf: displays.map {
@@ -272,6 +572,7 @@ final class AppModel: ObservableObject {
 
     private func performEmergencyQuit() {
         preferences.barrierEnabled = false
+        flushSave()
         UserDefaults.standard.synchronize()
         barrierStatus = text(ja: "接合部バリア：緊急停止", en: "Junction Barrier: Emergency stop")
         NSApplication.shared.terminate(nil)
@@ -279,15 +580,17 @@ final class AppModel: ObservableObject {
 
     private func refreshDisplays(quartz: [QuartzDisplayDescriptor]? = nil) {
         displays = DisplayProvider.current()
+        if selectedDisplayID == nil || !displays.contains(where: { $0.id == selectedDisplayID }) {
+            selectedDisplayID = displays.first?.id
+        }
         engine.displays = displays
         let resolvedQuartz = quartz ?? DisplayProvider.currentQuartz()
         if !resolvedQuartz.isEmpty {
             quartzDisplays = resolvedQuartz
         }
+        refreshFrontmostSuppressionState()
         refreshBarrier()
-        status = preferences.isEnabled
-            ? text(ja: "監視中（\(displays.count)画面）", en: "Monitoring (\(displays.count) displays)")
-            : text(ja: "停止中", en: "Stopped")
+        updateMonitoringStatus()
     }
 
     private func scheduleDisplayRefresh(
@@ -337,8 +640,6 @@ final class AppModel: ObservableObject {
             }
         }
         screenRefreshWorkItem = item
-        // Mission Control can emit several transient screen-parameter states.
-        // Apply only the settled layout so the wall set and latch do not flicker.
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
     }
 
@@ -350,14 +651,13 @@ final class AppModel: ObservableObject {
             scheduleDisplayRefresh(after: 1.0)
             return
         }
-        // Apply the bypass immediately to the existing tap; the delayed refresh
-        // then destroys and recreates the tap while preserving the safe rearm.
         barrierController.prepareForWake()
         scheduleDisplayRefresh(after: 1.0, mode: .forcedRestart)
     }
 
     private func handleApplicationActivation() {
         refreshPermissionStatus()
+        refreshCompanionAppStatus()
         if isSleeping {
             recordEvent(text(
                 ja: "安全機構：アプリの前面化を確認し、スリープ状態から安全に復旧します",
@@ -366,18 +666,13 @@ final class AppModel: ObservableObject {
             handleWake()
             return
         }
-        if preferences.barrierEnabled && !cursorControlActive {
+        if preferences.barrierEnabled && !cursorControlActive && !suppressionState.shouldSuppressBarriers {
             refreshBarrier()
         }
     }
 
     private func handleDisplayChange() {
         guard !isSleeping else { return }
-        // Mission Control and App Exposé temporarily report an empty or
-        // transitional display list. Do not pause from the notification-time
-        // snapshot: doing so opens a pass-through gap immediately after the
-        // hot-corner action. The settled refresh compares the real ID/frame
-        // configuration and enters the safe rearm only if it truly changed.
         scheduleDisplayRefresh(mode: .geometryChange)
     }
 
@@ -388,6 +683,7 @@ final class AppModel: ObservableObject {
         screenRefreshWorkItem = nil
         screenRefreshGeneration += 1
         pendingBarrierRefreshMode = .none
+        flushSave()
         engine.suspendForSleep()
         barrierController.stop()
         barrierCount = 0
@@ -395,7 +691,20 @@ final class AppModel: ObservableObject {
         recordEvent(text(ja: "安全機構：画面スリープ前にバリアを停止しました", en: "Safety: Barrier stopped before display sleep"))
     }
 
-    private func save() {
+    private func scheduleSave() {
+        saveWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                self?.flushSave()
+            }
+        }
+        saveWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: item)
+    }
+
+    private func flushSave() {
+        saveWorkItem?.cancel()
+        saveWorkItem = nil
         guard let data = try? JSONEncoder().encode(preferences) else { return }
         UserDefaults.standard.set(data, forKey: storageKey)
     }
@@ -405,10 +714,35 @@ final class AppModel: ObservableObject {
     }
 
     private func refreshFrontmostApplication() {
-        frontmostApplicationName = NSWorkspace.shared.frontmostApplication?.localizedName ?? text(ja: "不明", en: "Unknown")
+        let app = NSWorkspace.shared.frontmostApplication
+        frontmostApplicationName = app?.localizedName ?? text(ja: "不明", en: "Unknown")
+        frontmostApplicationBundleID = app?.bundleIdentifier
+        if (preferences.pauseInFullscreenApps || isSettingsWindowVisible), let pid = app?.processIdentifier {
+            let activeQuartz = quartzDisplays.isEmpty ? DisplayProvider.currentQuartz() : quartzDisplays
+            isFrontmostAppFullscreen = AppSuppressionPolicy.isProcessFullscreen(pid: pid, displays: activeQuartz)
+        } else if !preferences.pauseInFullscreenApps {
+            isFrontmostAppFullscreen = false
+        }
+        let previousBarrierSuppression = engine.isSuppressedByContext
+        refreshFrontmostSuppressionState()
+        if previousBarrierSuppression != engine.isSuppressedByContext || preferences.suppressionScope == .barriersAndActions {
+            refreshBarrier()
+        }
+    }
+
+    private func refreshFrontmostSuppressionState() {
+        let state = suppressionState
+        engine.isSuppressedByContext = state.shouldSuppressActions
     }
 
     private func performBarrierAction(_ barrier: CursorBarrier, sourceDisplayID: UInt32) {
+        if suppressionState.shouldSuppressActions {
+            status = text(
+                ja: "一時停止または除外条件によりアクションを抑制しました",
+                en: "Action suppressed by temporary pause or active app rule"
+            )
+            return
+        }
         guard let display = displays.first(where: { $0.displayNumber == barrier.displayID }) else {
             status = text(ja: "壁に対応する画面設定を取得できません", en: "Could not find display settings for the barrier")
             logBarrierAction(
@@ -424,7 +758,8 @@ final class AppModel: ObservableObject {
         }
         let sourceName = displays.first(where: { $0.displayNumber == sourceDisplayID })?.name
             ?? text(ja: "画面\(sourceDisplayID)", en: "Display \(sourceDisplayID)")
-        let action = preferences.barrierAction(displayID: display.id, corner: barrier.corner)
+        let assignment = preferences.assignment(displayID: display.id, corner: barrier.corner)
+        let action = assignment.action
         diagnostic("Barrier action: \(display.name) \(barrier.corner.rawValue) -> \(action.rawValue)")
         let zone = HotZone(
             displayID: display.id,
@@ -437,7 +772,7 @@ final class AppModel: ObservableObject {
         let loggedAction = action == .systemHotCorner
             ? executor.systemHotCornerDescription(for: barrier.corner, language: .english)
             : action.rawValue
-        let executionResult = executor.perform(action, zone: zone, language: language)
+        let executionResult = executor.perform(action, assignment: assignment, zone: zone, language: language)
         switch executionResult {
         case .performed:
             status = text(ja: "\(display.name)・\(corner)：\(actionName)を実行", en: "\(display.name) · \(corner): Ran \(actionName)")
@@ -513,22 +848,51 @@ final class AppModel: ObservableObject {
     private func refreshBarrier() {
         guard !isSleeping else { return }
         let activeQuartzDisplays = quartzDisplays.isEmpty ? DisplayProvider.currentQuartz() : quartzDisplays
-        let possibleBarriers = CursorBarrierGeometry.barriers(
+        let allStructuralBarriers = CursorBarrierGeometry.barriers(
             for: activeQuartzDisplays,
             length: preferences.barrierLength
         )
+        previewBarrierSegments = HotZoneGeometry.previewSegments(
+            displays: displays,
+            allBarriers: allStructuralBarriers,
+            length: preferences.barrierLength,
+            preferences: preferences
+        )
+        let disabledCornerKeys = HotZoneGeometry.disabledQuartzCornerKeys(
+            displays: displays,
+            preferences: preferences
+        )
+        let activeBarriers = allStructuralBarriers.filter { !disabledCornerKeys.contains($0.cornerKey) }
         let internalZoneIDs = HotZoneGeometry.zoneIDsCoveredByBarriers(
             displays: displays,
-            barriers: possibleBarriers
+            barriers: activeBarriers
         )
+        let state = suppressionState
+        let effectiveBarrierEnabled = preferences.barrierEnabled && !state.shouldSuppressBarriers
         engine.internalZoneIDs = internalZoneIDs
-        engine.suppressedZoneIDs = preferences.barrierEnabled ? internalZoneIDs : []
+        engine.suppressedZoneIDs = effectiveBarrierEnabled ? internalZoneIDs : []
         barrierController.update(
-            enabled: preferences.barrierEnabled,
+            enabled: effectiveBarrierEnabled,
             length: preferences.barrierLength,
             displays: activeQuartzDisplays,
+            disabledCornerKeys: disabledCornerKeys,
+            passThroughMode: preferences.passThroughMode,
+            speedBumpHoldMilliseconds: preferences.speedBumpHoldMilliseconds,
             language: language
         )
+        if preferences.barrierEnabled && state.shouldSuppressBarriers {
+            if state.isPausedByTimer {
+                barrierStatus = text(
+                    ja: "接合部バリア：一時停止中",
+                    en: "Junction Barrier: Temporarily paused"
+                )
+            } else {
+                barrierStatus = text(
+                    ja: "接合部バリア：除外/フルスクリーン条件により一時停止中",
+                    en: "Junction Barrier: Paused for excluded/fullscreen app"
+                )
+            }
+        }
     }
 
     private func updateEmergencyHotKeyStatus() {

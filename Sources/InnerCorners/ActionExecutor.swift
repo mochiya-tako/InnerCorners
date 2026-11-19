@@ -29,10 +29,43 @@ final class ActionExecutor {
         }
     }
 
-    func perform(_ action: CornerAction, zone: HotZone, language: AppLanguage) -> Result {
+    func perform(
+        _ action: CornerAction,
+        assignment: CornerAssignment? = nil,
+        zone: HotZone,
+        language: AppLanguage
+    ) -> Result {
+        let effectiveAssignment = assignment ?? CornerAssignment(
+            displayID: zone.displayID,
+            corner: zone.corner,
+            action: action
+        )
+        if effectiveAssignment.barrierPolicy == .stopperOnly {
+            return .skipped(L10n.text(
+                language,
+                ja: "ストッパー専用コーナー（アクションなし）",
+                en: "Stopper-only corner (no action)"
+            ))
+        }
+        if effectiveAssignment.modifierRequirement != .none {
+            let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+            guard effectiveAssignment.modifierRequirement.matches(current: currentFlags) else {
+                let symbols = effectiveAssignment.modifierRequirement.symbols
+                return .skipped(L10n.text(
+                    language,
+                    ja: "必要な修飾キー（\(symbols)）が押されていません（壁のみ作動）",
+                    en: "Required modifier (\(symbols)) not pressed (barrier only)"
+                ))
+            }
+        }
+
         switch action {
         case .systemHotCorner:
-            return performSystemHotCorner(for: zone.corner, language: language)
+            return performSystemHotCorner(
+                for: zone.corner,
+                ignoreDockModifiers: effectiveAssignment.modifierRequirement != .none,
+                language: language
+            )
         case .none:
             return .skipped(L10n.text(language, ja: "アクション未設定", en: "No action assigned"))
         case .testNotification:
@@ -41,10 +74,6 @@ final class ActionExecutor {
         case .missionControl:
             return runMissionControlDocklet(argument: nil, language: language)
         case .applicationWindows:
-            // App Exposé acts on the frontmost application; do not steal focus first.
-            guard NSWorkspace.shared.frontmostApplication?.processIdentifier != ProcessInfo.processInfo.processIdentifier else {
-                return .skipped(L10n.text(language, ja: "設定画面が前面のため抑制", en: "Suppressed while Settings is frontmost"))
-            }
             return runMissionControlDocklet(argument: "2", language: language)
         case .showDesktop:
             return runMissionControlDocklet(argument: "1", language: language)
@@ -76,15 +105,41 @@ final class ActionExecutor {
                 arguments: ["displaysleepnow"],
                 language: language
             )
+        case .screenshotSelection:
+            return runSystemCommand(
+                at: "/usr/sbin/screencapture",
+                arguments: ["-i"],
+                language: language
+            )
+        case .screenshotPanel:
+            return runSystemCommand(
+                at: "/usr/sbin/screencapture",
+                arguments: ["-i", "-U"],
+                language: language
+            )
+        case .openApplication:
+            return openCustomApplication(
+                path: effectiveAssignment.customApplicationPath,
+                language: language
+            )
+        case .runShortcut:
+            return runCustomShortcut(
+                name: effectiveAssignment.customShortcutName,
+                language: language
+            )
         }
     }
 
     func requestAccessibilityPermission() {
+        _ = CGRequestPostEventAccess()
         _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     var isAccessibilityGranted: Bool {
-        AXIsProcessTrusted()
+        AXIsProcessTrusted() || CGPreflightPostEventAccess()
     }
 
     func systemHotCornerDescription(for corner: Corner, language: AppLanguage) -> String {
@@ -109,32 +164,38 @@ final class ActionExecutor {
         )
     }
 
-    private func performSystemHotCorner(for corner: Corner, language: AppLanguage) -> Result {
+    private func performSystemHotCorner(
+        for corner: Corner,
+        ignoreDockModifiers: Bool,
+        language: AppLanguage
+    ) -> Result {
         let suffix = preferenceSuffix(for: corner)
         let dock = UserDefaults(suiteName: "com.apple.dock")
         let modifier = dock?.integer(forKey: "wvous-\(suffix)-modifier") ?? 0
-        let modifierRequirement = SystemHotCornerModifier(dockValue: modifier)
-        if modifierRequirement.hasUnknownBits {
-            return .unsupported(L10n.text(
-                language,
-                ja: "未対応の修飾キー設定です（値：\(modifier)）",
-                en: "Unsupported modifier setting (value: \(modifier))"
-            ))
-        }
-        if modifierRequirement.usesEmergencyOptionKey {
-            return .unsupported(L10n.text(
-                language,
-                ja: "Optionキーは緊急通過を優先するため、アクション条件には使用できません",
-                en: "The Option key is reserved for emergency bypass and cannot trigger an action"
-            ))
-        }
-        let currentFlags = CGEventSource.flagsState(.combinedSessionState)
-        guard modifierRequirement.matches(current: currentFlags) else {
-            return .skipped(L10n.text(
-                language,
-                ja: "必要な修飾キー（\(modifierRequirement.symbols(language: language))）が押されていません",
-                en: "Required modifier keys are not pressed (\(modifierRequirement.symbols(language: language)))"
-            ))
+        if !ignoreDockModifiers {
+            let modifierRequirement = SystemHotCornerModifier(dockValue: modifier)
+            if modifierRequirement.hasUnknownBits {
+                return .unsupported(L10n.text(
+                    language,
+                    ja: "未対応の修飾キー設定です（値：\(modifier)）",
+                    en: "Unsupported modifier setting (value: \(modifier))"
+                ))
+            }
+            if modifierRequirement.usesEmergencyOptionKey {
+                return .unsupported(L10n.text(
+                    language,
+                    ja: "Optionキーは緊急通過を優先するため、アクション条件には使用できません",
+                    en: "The Option key is reserved for emergency bypass and cannot trigger an action"
+                ))
+            }
+            let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+            guard modifierRequirement.matches(current: currentFlags) else {
+                return .skipped(L10n.text(
+                    language,
+                    ja: "必要な修飾キー（\(modifierRequirement.symbols(language: language))）が押されていません",
+                    en: "Required modifier keys are not pressed (\(modifierRequirement.symbols(language: language)))"
+                ))
+            }
         }
         let dockValue = dock?.integer(forKey: "wvous-\(suffix)-corner") ?? 0
         let action = SystemHotCornerAction(dockValue: dockValue)
@@ -233,7 +294,45 @@ final class ActionExecutor {
                 en: "The macOS screen saver application was not found"
             ))
         }
-        return openApplication(at: url, arguments: [], language: language)
+        return openApplication(at: url, arguments: [], createsNewInstance: true, language: language)
+    }
+
+    private func openCustomApplication(path: String?, language: AppLanguage) -> Result {
+        guard let path = path?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty else {
+            return .skipped(L10n.text(
+                language,
+                ja: "起動するアプリが選択されていません",
+                en: "No application selected to open"
+            ))
+        }
+        guard FileManager.default.fileExists(atPath: path) else {
+            return .failed(L10n.text(
+                language,
+                ja: "指定されたアプリが見つかりません",
+                en: "The selected application was not found"
+            ))
+        }
+        return openApplication(
+            at: URL(fileURLWithPath: path),
+            arguments: [],
+            createsNewInstance: false,
+            language: language
+        )
+    }
+
+    private func runCustomShortcut(name: String?, language: AppLanguage) -> Result {
+        guard let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
+            return .skipped(L10n.text(
+                language,
+                ja: "ショートカット名が指定されていません",
+                en: "No Shortcut name specified"
+            ))
+        }
+        return runSystemCommand(
+            at: "/usr/bin/shortcuts",
+            arguments: ["run", trimmed],
+            language: language
+        )
     }
 
     private func openDockletApplication(at path: String, arguments: [String], language: AppLanguage) -> Result {
@@ -243,14 +342,21 @@ final class ActionExecutor {
         return openApplication(
             at: URL(fileURLWithPath: path),
             arguments: arguments,
+            createsNewInstance: true,
             language: language
         )
     }
 
-    private func openApplication(at url: URL, arguments: [String], language: AppLanguage) -> Result {
+    private func openApplication(
+        at url: URL,
+        arguments: [String],
+        createsNewInstance: Bool,
+        language: AppLanguage
+    ) -> Result {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.arguments = arguments
-        configuration.createsNewApplicationInstance = true
+        configuration.createsNewApplicationInstance = createsNewInstance
+        configuration.activates = true
         NSWorkspace.shared.openApplication(
             at: url,
             configuration: configuration
@@ -259,8 +365,6 @@ final class ActionExecutor {
                 FileHandle.standardError.write(Data("Docklet launch error: \(error)\n".utf8))
             }
         }
-        // NSWorkspace completes asynchronously.  At this point the request was
-        // accepted, but the target application has not yet reported success.
         return .requested
     }
 
@@ -269,7 +373,7 @@ final class ActionExecutor {
         flags: CGEventFlags,
         language: AppLanguage
     ) -> Result {
-        guard CGPreflightPostEventAccess() else {
+        guard CGPreflightPostEventAccess() || AXIsProcessTrusted() else {
             return .permissionRequired
         }
         let source = CGEventSource(stateID: .combinedSessionState)
@@ -292,8 +396,6 @@ final class ActionExecutor {
         keyUp.flags = flags
         keyDown.post(tap: .cghidEventTap)
         keyUp.post(tap: .cghidEventTap)
-        // CGEvent posting has no completion callback. The request was posted,
-        // but only the target system feature can confirm the visible result.
         return .requested
     }
 
@@ -316,7 +418,6 @@ final class ActionExecutor {
         process.standardError = FileHandle.nullDevice
         do {
             try process.run()
-            // Process launch is synchronous, but command completion is not.
             return .requested
         } catch {
             return .failed(L10n.text(
@@ -326,5 +427,4 @@ final class ActionExecutor {
             ))
         }
     }
-
 }

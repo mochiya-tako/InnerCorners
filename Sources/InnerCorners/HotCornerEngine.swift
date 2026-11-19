@@ -32,6 +32,12 @@ final class HotCornerEngine {
             activationGate.reset()
         }
     }
+    var isSuppressedByContext = false {
+        didSet {
+            guard oldValue != isSuppressedByContext else { return }
+            activationGate.reset()
+        }
+    }
     var internalZoneIDs: Set<String> = []
     var onStatus: ((String) -> Void)?
     var onHover: ((HotZone?) -> Void)?
@@ -70,10 +76,10 @@ final class HotCornerEngine {
 
     private func start() {
         guard timer == nil else { return }
-        // 50 Hz is responsive for a 0–500 ms dwell while remaining trivial work per tick.
         let timer = Timer(timeInterval: 0.02, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.sample() }
         }
+        timer.tolerance = 0.005
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
@@ -113,19 +119,16 @@ final class HotCornerEngine {
             activationGate.reset()
             return
         }
-        guard preferences.isEnabled else {
+        guard preferences.isEnabled, !isSuppressedByContext else {
             activationGate.reset()
             return
         }
 
-        // Option is the emergency escape for the cursor barrier. Suppress the
-        // companion action too, so bypassing a corner never launches anything.
         guard !CGEventSource.flagsState(.combinedSessionState).contains(.maskAlternate) else {
             activationGate.reset()
             return
         }
 
-        // Dragging a window or file into a corner is common and should never trigger an action.
         guard NSEvent.pressedMouseButtons == 0 else {
             activationGate.reset()
             return
@@ -134,14 +137,16 @@ final class HotCornerEngine {
         let dwell = preferences.dwellMilliseconds / 1_000
         guard let firedID = activationGate.update(zoneID: actionableCurrent?.id, now: now, dwell: dwell),
               let current = actionableCurrent, current.id == firedID else { return }
-        let action = preferences.action(displayID: current.displayID, corner: current.corner)
+        let assignment = preferences.assignment(displayID: current.displayID, corner: current.corner)
+        guard assignment.barrierPolicy != .disabled else { return }
+        let action = assignment.action
         guard HotZoneGeometry.shouldExecuteCustomAction(
             action,
             zoneID: current.id,
             internalZoneIDs: internalZoneIDs
         ) else { return }
         let language = preferences.appLanguage
-        let executionResult = executor.perform(action, zone: current, language: language)
+        let executionResult = executor.perform(action, assignment: assignment, zone: current, language: language)
         switch executionResult {
         case .performed:
             onStatus?("\(current.displayName) · \(current.corner.title(language: language)): \(action.title(language: language))")

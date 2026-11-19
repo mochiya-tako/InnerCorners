@@ -1,6 +1,17 @@
 import CoreGraphics
 import Foundation
 
+struct BarrierPreviewSegment: Identifiable, Equatable {
+    let id: String
+    let displayPersistentID: String
+    let displayNumber: UInt32
+    let corner: Corner
+    let axis: BarrierAxis
+    let policy: CornerBarrierPolicy
+    /// Segment rectangle in AppKit screen coordinates (`NSScreen.frame`).
+    let rect: CGRect
+}
+
 enum HotZoneGeometry {
     static func sameDisplayConfiguration(
         _ lhs: [DisplayDescriptor],
@@ -25,6 +36,71 @@ enum HotZoneGeometry {
                 "\($0):\(barrier.corner.rawValue)"
             }
         })
+    }
+
+    static func disabledQuartzCornerKeys(
+        displays: [DisplayDescriptor],
+        preferences: Preferences
+    ) -> Set<String> {
+        var result: Set<String> = []
+        for display in displays {
+            for corner in Corner.allCases {
+                if preferences.barrierPolicy(displayID: display.id, corner: corner) == .disabled {
+                    result.insert("\(display.displayNumber):\(corner.rawValue)")
+                }
+            }
+        }
+        return result
+    }
+
+    static func previewSegments(
+        displays: [DisplayDescriptor],
+        allBarriers: [CursorBarrier],
+        length requestedLength: CGFloat,
+        preferences: Preferences
+    ) -> [BarrierPreviewSegment] {
+        let displayByNumber = Dictionary(
+            displays.map { ($0.displayNumber, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let length = min(max(requestedLength, 10), 100)
+        let thickness: CGFloat = 14
+
+        return allBarriers.compactMap { barrier in
+            guard let display = displayByNumber[barrier.displayID] else { return nil }
+            let f = display.frame
+            let clampedLen = min(length, f.width / 2, f.height / 2)
+            let policy = preferences.barrierPolicy(displayID: display.id, corner: barrier.corner)
+
+            let rect: CGRect
+            switch (barrier.corner, barrier.axis) {
+            case (.topLeft, .vertical):
+                rect = CGRect(x: f.minX, y: f.maxY - clampedLen, width: thickness, height: clampedLen)
+            case (.topLeft, .horizontal):
+                rect = CGRect(x: f.minX, y: f.maxY - thickness, width: clampedLen, height: thickness)
+            case (.topRight, .vertical):
+                rect = CGRect(x: f.maxX - thickness, y: f.maxY - clampedLen, width: thickness, height: clampedLen)
+            case (.topRight, .horizontal):
+                rect = CGRect(x: f.maxX - clampedLen, y: f.maxY - thickness, width: clampedLen, height: thickness)
+            case (.bottomLeft, .vertical):
+                rect = CGRect(x: f.minX, y: f.minY, width: thickness, height: clampedLen)
+            case (.bottomLeft, .horizontal):
+                rect = CGRect(x: f.minX, y: f.minY, width: clampedLen, height: thickness)
+            case (.bottomRight, .vertical):
+                rect = CGRect(x: f.maxX - thickness, y: f.minY, width: thickness, height: clampedLen)
+            case (.bottomRight, .horizontal):
+                rect = CGRect(x: f.maxX - clampedLen, y: f.minY, width: clampedLen, height: thickness)
+            }
+            return BarrierPreviewSegment(
+                id: barrier.id,
+                displayPersistentID: display.id,
+                displayNumber: display.displayNumber,
+                corner: barrier.corner,
+                axis: barrier.axis,
+                policy: policy,
+                rect: rect
+            )
+        }
     }
 
     static func shouldExecuteCustomAction(
@@ -52,8 +128,6 @@ enum HotZoneGeometry {
         }
     }
 
-    /// Half-open containment ([min, max)) makes two abutting displays deterministic.
-    /// The seam belongs to the display whose minimum edge starts at that coordinate.
     static func contains(_ point: CGPoint, in rect: CGRect) -> Bool {
         point.x >= rect.minX && point.x < rect.maxX && point.y >= rect.minY && point.y < rect.maxY
     }
