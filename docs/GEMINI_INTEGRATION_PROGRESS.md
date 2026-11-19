@@ -1,12 +1,12 @@
 # Gemini統合進捗
 
-更新日: 2026-11-19 21:52 JST
+更新日: 2026-11-20 01:03 JST
 作業ブランチ: `codex/gemini-integration`  
 安定比較基準: `main` / `v0.11.0-rc.7`
 
 ## 現在の位置
 
-Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を進めている。現在の統合版は`InnerCorners GE` build 71。`main`の製品コードはRC7系のままで、統合版はまだ正式な日常利用版・配布候補ではない。
+Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を完了した。現在の統合版は`InnerCorners GE v0.12.0 Beta 1` build 71のローカル候補。`main`の製品コードはRC7系のままで、GitHub Releaseはまだ作成していない。
 
 ## 完了した変更
 
@@ -35,9 +35,9 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 - `Scripts/build_app.sh`: 合格。
 - アドホック署名検証: 合格。
 - ZIP再展開後の署名検証: 合格。
-- 生成ZIP SHA-256: `26c81df7ddf91d5ac0a7f6eb61440cbd032476e2c0e105595d4288d7968730e2`
+- アプリZIP SHA-256: `f5ed8d44d4e49b03c506b0c92bc35d43d10d1278a14f290ee873cc5999d32fd8`
 
-生成物: `outputs/InnerCorners-GE-v0.12.0-build71-arm64.app.zip`（Git管理外）
+生成物: `outputs/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip`、`outputs/InnerCorners-GE-v0.12.0-beta.1-build71-source.zip`（ともにGit管理外）
 
 ## build 66 実機安全試験
 
@@ -92,9 +92,12 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 
 ## 未検証・未完了
 
-- READMEと版表記を`v0.12.0-beta.1`へ整える作業（製品名はInnerCorners GEへ改名済み）。
+- 長時間常駐、1000 Hz級マウス、Sidecar、別Mac、macOS 14／15／26の同等実機試験。
+- Developer ID署名、公証、Gatekeeper有効の別Macでの配布試験。
+- GitHubへのbetaブランチのプッシュとBeta 1 Release作成。
 
 ## 次の順序
 
-1. READMEと版表記をbeta向けへ更新する。
-2. `main`へはまだ統合しない。
+1. beta向け文書・生成物を最終検証する。
+2. ユーザー承認後にGitHubへプッシュし、必要ならBeta 1 Releaseを作成する。
+3. `main`への統合はbeta公開・追加試用とは分けて判断する。

@@ -1,4 +1,4 @@
-# InnerCorners v0.11.0 RC7
+# InnerCorners GE v0.12.0 Beta 1
 
 [English](#english) | [日本語](#日本語)
 
@@ -6,21 +6,22 @@
 
 | Download | ダウンロード | Link |
 | --- | --- | --- |
-| Latest RC app — Apple Silicon | 最新RCアプリ — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
+| GE Beta 1 app — Apple Silicon | GE Beta 1アプリ — Apple Silicon | GitHub release pending / GitHub公開待ち |
+| Stable comparison RC — Apple Silicon | 安定比較用RC — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
 | All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
 | Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
 
 > [!IMPORTANT]
-> RC7 is a pre-release for testing. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
+> GE Beta 1 is a locally validated pre-release and has not yet been published as a GitHub Release. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
 >
-> RC7は試用向けのプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
+> GE Beta 1はローカル検証済みですが、GitHub Releaseにはまだ公開していません。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
 
 ## English
 
 InnerCorners is an experimental macOS menu bar app that makes the inner corners of multi-display layouts behave more like native outer hot corners. It places short, directional cursor barriers at display junctions and can run a separate action for each display and corner.
 
 > [!WARNING]
-> This is a release candidate, not a finished public release. It requires Accessibility permission because it monitors and constrains pointer movement. Keep the Option-key bypass and emergency quit shortcut available while testing.
+> This is a beta, not a finished public release. It requires Accessibility permission because it monitors and constrains pointer movement. Keep the Option-key bypass and emergency quit shortcut available while testing.
 
 ### Highlights
 
@@ -30,6 +31,8 @@ InnerCorners is an experimental macOS menu bar app that makes the inner corners 
 - Uses Option as a temporary barrier bypass.
 - Provides an independent Control–Option–Command–Q emergency shortcut that disables barriers, saves that state, and quits.
 - Supports per-display, per-corner actions and 0–500 ms dwell times.
+- Supports per-corner barrier policies, optional modifier requirements, and a speed-bump mode.
+- Can suppress actions only, or both barriers and actions, for excluded and fullscreen apps.
 - Prevents repeated activation until the pointer leaves the activation area.
 - Follows display connection, disconnection, resolution, mirroring, and layout changes.
 - Offers Japanese and English user interfaces.
@@ -46,6 +49,10 @@ InnerCorners is an experimental macOS menu bar app that makes the inner corners 
 - Lock Screen
 - Start Screen Saver
 - Put Display to Sleep
+- Capture Selection
+- Open Screenshot Toolbar
+- Open an Application
+- Run a Shortcut
 - None
 
 Outer corners set to “Follow macOS Hot Corners” are left to macOS to avoid double activation. Inner corners can use the matching system setting through InnerCorners.
@@ -92,7 +99,7 @@ The app bundle is ad-hoc signed. Developer ID signing, notarization, and operati
 
 ### Verification status
 
-RC7 has been exercised on an Apple Silicon Mac with macOS 27.0.1 using two- and three-display horizontal, vertical, L-shaped, convex, T-shaped, and mirrored layouts. Barrier ownership, strict-corner contact, high-speed entry, reactivation, display removal/reconnection, sleep/wake recovery, the emergency paths, settings persistence, and the listed actions were tested in the configurations recorded in the development history.
+GE Beta 1 build 71 has passed 90 automated tests and live testing on an Apple Silicon Mac with macOS 27.0.1. Tested scenarios include two- and three-display layouts, L-shaped and mirrored arrangements, strict and high-speed corner entry, full workspace-action cancellation combinations, physical display removal/reconnection, resolution changes, sleep/wake recovery, event-tap timeout recovery, temporary pause, excluded/fullscreen app suppression, speed-bump passage, emergency paths, settings persistence, and asynchronous completion diagnostics.
 
 This does not establish compatibility with every Mac, display, pointing device, keyboard layout, or supported macOS version.
 
@@ -115,7 +122,7 @@ See [development plan](DEVELOPMENT_PLAN.md), [English development summary](docs/
 InnerCornersは、macOSのマルチディスプレイ接合部に短い方向別カーソル壁を設け、内側角を外周の標準ホットコーナーに近い感覚で利用できるようにする実験的なメニューバーアプリです。画面・コーナーごとに異なるアクションを割り当てられます。
 
 > [!WARNING]
-> 現在は一般公開版ではなくリリース候補です。カーソルの監視と制約にアクセシビリティ権限を使用します。試用中はOptionキーによる一時通過と緊急終了ショートカットを利用できる状態にしてください。
+> 現在は一般公開版ではなくベータ版です。カーソルの監視と制約にアクセシビリティ権限を使用します。試用中はOptionキーによる一時通過と緊急終了ショートカットを利用できる状態にしてください。
 
 ### 主な機能
 
@@ -125,6 +132,8 @@ InnerCornersは、macOSのマルチディスプレイ接合部に短い方向別
 - Optionキーを押している間は壁を一時通過可能
 - カーソル監視とは独立したControl–Option–Command–Qで、壁を無効として保存してから緊急終了
 - 画面・コーナー別アクションと0～500 msの滞留時間
+- コーナー別の壁ポリシー、修飾キー条件、押し続けて通過するスピードバンプ
+- 除外アプリ／フルスクリーン時に、アクションのみまたは壁とアクションの両方を抑制
 - 領域を出るまでの再発動抑制
 - 画面の接続・切断、解像度、ミラーリング、配置変更への追従
 - 日本語・英語UI
@@ -141,6 +150,10 @@ InnerCornersは、macOSのマルチディスプレイ接合部に短い方向別
 - 画面をロック
 - スクリーンセーバを開始
 - ディスプレイをスリープ
+- 選択範囲を撮影
+- スクリーンショットツールバーを開く
+- アプリケーションを開く
+- ショートカットを実行
 - なし
 
 外周コーナーで「macOSの標準設定に従う」を選んだ場合は、二重発火を避けるためmacOS自身に処理を任せます。内側角ではInnerCornersが対応する標準設定を補完します。
@@ -187,7 +200,7 @@ Scripts/build_source_archive.sh
 
 ### 検証状況
 
-RC7はApple Silicon Mac・macOS 27.0.1で、2画面および3画面の横一列、縦一列、L字、凸型、T字、ミラーリング構成を使って試験しています。開発履歴に記録した構成では、壁の所有判定、厳密な角への接触、高速進入、再発動、画面の切断・再接続、スリープ復帰、安全な終了経路、設定保持、各アクションを確認しました。
+GE Beta 1 build 71は90件の自動テストに合格し、Apple Silicon Mac・macOS 27.0.1で実機試験しています。2画面・3画面、L字・ミラーリング、厳密角・高速進入、ワークスペース4機能の全キャンセル組合せ、物理的な画面切断・再接続、解像度変更、スリープ復帰、イベントタップのタイムアウト復旧、一時停止、除外／フルスクリーン抑制、スピードバンプ、緊急経路、設定保持、非同期完了診断を確認しました。
 
 これは、すべてのMac、ディスプレイ、ポインティングデバイス、キーボード配列、対応macOSでの互換性を保証するものではありません。
 
