@@ -1,3 +1,4 @@
+import CoreGraphics
 import XCTest
 @testable import InnerCorners
 
@@ -31,6 +32,23 @@ final class ActionExecutorResultTests: XCTestCase {
         )
         XCTAssertFalse(eventPostingOnly.accessibilityAPI)
         XCTAssertTrue(eventPostingOnly.eventPosting)
+    }
+
+    func testObservedModifierFlagsTakePrecedenceOverLaterGlobalState() {
+        XCTAssertEqual(
+            ActionExecutor.resolvedModifierFlags(
+                observedAtTrigger: .maskCommand,
+                current: .maskControl
+            ),
+            .maskCommand
+        )
+        XCTAssertEqual(
+            ActionExecutor.resolvedModifierFlags(
+                observedAtTrigger: nil,
+                current: .maskControl
+            ),
+            .maskControl
+        )
     }
 
 

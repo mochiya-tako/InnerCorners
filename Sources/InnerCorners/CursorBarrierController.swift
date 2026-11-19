@@ -67,7 +67,7 @@ final class CursorBarrierController {
 
     var onStatus: ((String) -> Void)?
     var onBarrierCount: ((Int) -> Void)?
-    var onCollision: ((CursorBarrier, UInt32) -> Void)?
+    var onCollision: ((CursorBarrier, UInt32, CGEventFlags) -> Void)?
     var onBarrierHit: ((CursorBarrier) -> Void)?
     var onSafetyEvent: ((String) -> Void)?
     var onEventTapStateChange: ((Bool) -> Void)?
@@ -298,8 +298,9 @@ final class CursorBarrierController {
                 reactivationGate.recordTrigger(collision.barrier)
                 let barrier = collision.barrier
                 let sourceDisplayID = approachDisplayID
+                let modifierFlagsAtCollision = event.flags.union(globalFlags)
                 DispatchQueue.main.async { [weak self] in
-                    self?.onCollision?(barrier, sourceDisplayID)
+                    self?.onCollision?(barrier, sourceDisplayID, modifierFlagsAtCollision)
                 }
             }
             self.previousLocation = constrained

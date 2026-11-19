@@ -156,8 +156,12 @@ final class AppModel: ObservableObject {
             self.hitHighlightWorkItem = item
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: item)
         }
-        barrierController.onCollision = { [weak self] barrier, sourceDisplayID in
-            self?.performBarrierAction(barrier, sourceDisplayID: sourceDisplayID)
+        barrierController.onCollision = { [weak self] barrier, sourceDisplayID, modifierFlags in
+            self?.performBarrierAction(
+                barrier,
+                sourceDisplayID: sourceDisplayID,
+                modifierFlagsAtCollision: modifierFlags
+            )
         }
         barrierController.onSafetyEvent = { [weak self] message in
             guard let self else { return }
@@ -750,7 +754,11 @@ final class AppModel: ObservableObject {
         engine.isSuppressedByContext = state.shouldSuppressActions
     }
 
-    private func performBarrierAction(_ barrier: CursorBarrier, sourceDisplayID: UInt32) {
+    private func performBarrierAction(
+        _ barrier: CursorBarrier,
+        sourceDisplayID: UInt32,
+        modifierFlagsAtCollision: CGEventFlags
+    ) {
         if suppressionState.shouldSuppressActions {
             status = text(
                 ja: "一時停止または除外条件によりアクションを抑制しました",
@@ -787,7 +795,13 @@ final class AppModel: ObservableObject {
         let loggedAction = action == .systemHotCorner
             ? executor.systemHotCornerDescription(for: barrier.corner, language: .english)
             : action.rawValue
-        let executionResult = executor.perform(action, assignment: assignment, zone: zone, language: language)
+        let executionResult = executor.perform(
+            action,
+            assignment: assignment,
+            zone: zone,
+            modifierFlagsAtTrigger: modifierFlagsAtCollision,
+            language: language
+        )
         switch executionResult {
         case .performed:
             status = text(ja: "\(display.name)・\(corner)：\(actionName)を実行", en: "\(display.name) · \(corner): Ran \(actionName)")

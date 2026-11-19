@@ -41,10 +41,18 @@ final class ActionExecutor {
         frontmostProcessIdentifier == currentProcessIdentifier
     }
 
+    nonisolated static func resolvedModifierFlags(
+        observedAtTrigger: CGEventFlags?,
+        current: CGEventFlags
+    ) -> CGEventFlags {
+        observedAtTrigger ?? current
+    }
+
     func perform(
         _ action: CornerAction,
         assignment: CornerAssignment? = nil,
         zone: HotZone,
+        modifierFlagsAtTrigger: CGEventFlags? = nil,
         language: AppLanguage
     ) -> Result {
         let effectiveAssignment = assignment ?? CornerAssignment(
@@ -60,7 +68,10 @@ final class ActionExecutor {
             ))
         }
         if effectiveAssignment.modifierRequirement != .none {
-            let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+            let currentFlags = Self.resolvedModifierFlags(
+                observedAtTrigger: modifierFlagsAtTrigger,
+                current: CGEventSource.flagsState(.combinedSessionState)
+            )
             guard effectiveAssignment.modifierRequirement.matches(current: currentFlags) else {
                 let symbols = effectiveAssignment.modifierRequirement.symbols
                 return .skipped(L10n.text(
@@ -76,6 +87,7 @@ final class ActionExecutor {
             return performSystemHotCorner(
                 for: zone.corner,
                 ignoreDockModifiers: effectiveAssignment.modifierRequirement != .none,
+                modifierFlagsAtTrigger: modifierFlagsAtTrigger,
                 language: language
             )
         case .none:
@@ -196,6 +208,7 @@ final class ActionExecutor {
     private func performSystemHotCorner(
         for corner: Corner,
         ignoreDockModifiers: Bool,
+        modifierFlagsAtTrigger: CGEventFlags?,
         language: AppLanguage
     ) -> Result {
         let suffix = preferenceSuffix(for: corner)
@@ -217,7 +230,10 @@ final class ActionExecutor {
                     en: "The Option key is reserved for emergency bypass and cannot trigger an action"
                 ))
             }
-            let currentFlags = CGEventSource.flagsState(.combinedSessionState)
+            let currentFlags = Self.resolvedModifierFlags(
+                observedAtTrigger: modifierFlagsAtTrigger,
+                current: CGEventSource.flagsState(.combinedSessionState)
+            )
             guard modifierRequirement.matches(current: currentFlags) else {
                 return .skipped(L10n.text(
                     language,
