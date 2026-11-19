@@ -222,9 +222,17 @@ final class AppModel: ObservableObject {
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
+        ) { [weak self] notification in
+            let activatedBundleIdentifier = (
+                notification.userInfo?[NSWorkspace.applicationUserInfoKey]
+                    as? NSRunningApplication
+            )?.bundleIdentifier
             MainActor.assumeIsolated {
-                self?.executor.clearWorkspaceCancellationState()
+                if WorkspaceActivationPolicy.shouldClearCancellationState(
+                    activatedBundleIdentifier: activatedBundleIdentifier
+                ) {
+                    self?.executor.clearWorkspaceCancellationState()
+                }
                 self?.refreshFrontmostApplication()
             }
         }

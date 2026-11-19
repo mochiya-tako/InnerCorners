@@ -1,12 +1,12 @@
 # Gemini統合進捗
 
-更新日: 2026-11-19 17:55 JST
+更新日: 2026-11-19 18:19 JST
 作業ブランチ: `codex/gemini-integration`  
 安定比較基準: `main` / `v0.11.0-rc.7`
 
 ## 現在の位置
 
-Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を進めている。現在の統合版は`InnerCorners GE` build 69。`main`の製品コードはRC7系のままで、統合版はまだ正式な日常利用版・配布候補ではない。
+Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を進めている。現在の統合版は`InnerCorners GE` build 70。`main`の製品コードはRC7系のままで、統合版はまだ正式な日常利用版・配布候補ではない。
 
 ## 完了した変更
 
@@ -24,18 +24,19 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 11. `f16798e` — 一時停止・除外・フルスクリーン抑制の安全状態保持を組合せ試験。
 12. `bcb173e` — 画面収録権限に依存せず、別コーナー衝突によるワークスペース表示のキャンセル候補を追跡。
 13. `9e6dc07` — 別コーナーでのキャンセル時にEscapeを先行送信せず、直前に開いたMission Control系機能を再度呼ぶ方式へ変更。Appsの非同期表示とEscapeが前後して検索画面だけ残る競合を解消。
+14. build 70 — Apps／Launchpad／Mission Control／Dock自身のアプリ切替通知ではキャンセル待機を消さず、通常アプリへの切替とクリックでは消すよう通知境界を修正。
 
 ## 自動検証
 
-- `swift test`: 85件すべて合格。
+- `swift test`: 88件すべて合格。
 - `Scripts/run_self_tests.sh`: 合格。
 - Swift 6 release build（`-warnings-as-errors`）: 合格。
 - `Scripts/build_app.sh`: 合格。
 - アドホック署名検証: 合格。
 - ZIP再展開後の署名検証: 合格。
-- 生成ZIP SHA-256: `3c1746cb40899776344ede5504173369c929df9d96fb9ef1475513212f271673`
+- 生成ZIP SHA-256: `821df0995a47a9074cac2da927723c9f628ea255f0c35b459277a1ffead7c867`
 
-生成物: `outputs/InnerCorners-GE-v0.12.0-build69-arm64.app.zip`（Git管理外）
+生成物: `outputs/InnerCorners-GE-v0.12.0-build70-arm64.app.zip`（Git管理外）
 
 ## build 66 実機安全試験
 
@@ -59,6 +60,14 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 - build 69では直前の機能自体を再度呼ぶトグル方式へ変更。ユーザーが右下Apps→左上Show Desktopを含む高速な連続操作を実機確認し、異常なし。
 - build 69起動後、Quartzイベントタップが1本・`enabled=true`であること、およびOSログでApps後のShow Desktop衝突が`workspace-cancel-requested`として処理されたことを確認。
 - Escape送信は、画面状態を直接検出できたが直前対象を保持していない予備経路だけに限定し、修飾キーフラグを明示的に空にした。
+
+## build 70 Apps起動通知の回帰試験
+
+- build 69の組合せ試験ログで、高速なApps→別コーナーはキャンセルされる一方、Apps表示後に約3秒置いた操作ではApps自身のアプリ切替通知が待機状態を消すことを確認。
+- `com.apple.apps.launcher`、旧OS用`com.apple.launchpad.launcher`、`com.apple.exposelauncher`、`com.apple.dock`だけを待機解除の例外とした。通常アプリへの切替と識別不能な通知は安全側で解除する。
+- ユーザー実機試験で、Apps完全表示から約5秒後のShow Desktop衝突がキャンセルとして処理されることを確認。
+- 続く高速試験では、Appsから約1.1〜1.4秒後のShow Desktop衝突を複数回キャンセルとして記録。意図しないApps／Spotlight表示の残留はユーザーから報告されなかった。
+- build 70起動後のQuartzイベントタップは1本・`enabled=true`。
 
 ## 未検証・未完了
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 project_dir="${0:A:h:h}"
-version="GE-v0.12.0-build69"
+version="GE-v0.12.0-build70"
 archive_name="InnerCorners-${version}-source"
 output_path="${project_dir}/outputs/${archive_name}.zip"
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/innercorners-source.XXXXXX")"

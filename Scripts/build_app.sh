@@ -9,7 +9,7 @@ APP_DIR="$BUILD_DIR/$APP_NAME"
 RESOURCE_DIR="$APP_DIR/Contents/Resources"
 ICON_BUILD_DIR="$BUILD_DIR/generated-icons"
 VERIFY_DIR="$BUILD_DIR/verify"
-OUTPUT_ZIP="$PROJECT_DIR/outputs/InnerCorners-GE-v0.12.0-build69-arm64.app.zip"
+OUTPUT_ZIP="$PROJECT_DIR/outputs/InnerCorners-GE-v0.12.0-build70-arm64.app.zip"
 CACHE_DIR="$BUILD_DIR/clang-cache"
 
 rm -rf "$BUILD_DIR" "$PROJECT_DIR/work/clang-cache"
