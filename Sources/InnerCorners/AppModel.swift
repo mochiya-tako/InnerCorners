@@ -61,6 +61,7 @@ final class AppModel: ObservableObject {
     private var spaceObserver: NSObjectProtocol?
     private var appLaunchObserver: NSObjectProtocol?
     private var appTerminateObserver: NSObjectProtocol?
+    private var mouseDownMonitor: Any?
     private var wakeObserver: NSObjectProtocol?
     private var screensWakeObserver: NSObjectProtocol?
     private var sleepObserver: NSObjectProtocol?
@@ -222,7 +223,17 @@ final class AppModel: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshFrontmostApplication() }
+            MainActor.assumeIsolated {
+                self?.executor.clearWorkspaceCancellationState()
+                self?.refreshFrontmostApplication()
+            }
+        }
+        mouseDownMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.executor.clearWorkspaceCancellationState()
+            }
         }
         spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.activeSpaceDidChangeNotification,
@@ -289,6 +300,7 @@ final class AppModel: ObservableObject {
         if let spaceObserver { NSWorkspace.shared.notificationCenter.removeObserver(spaceObserver) }
         if let appLaunchObserver { NSWorkspace.shared.notificationCenter.removeObserver(appLaunchObserver) }
         if let appTerminateObserver { NSWorkspace.shared.notificationCenter.removeObserver(appTerminateObserver) }
+        if let mouseDownMonitor { NSEvent.removeMonitor(mouseDownMonitor) }
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
         if let screensWakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(screensWakeObserver) }
         if let sleepObserver { NSWorkspace.shared.notificationCenter.removeObserver(sleepObserver) }

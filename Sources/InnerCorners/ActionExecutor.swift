@@ -49,6 +49,7 @@ final class ActionExecutor {
     }
 
     var onAsyncCompletion: ((AsyncCompletion) -> Void)?
+    private var workspaceCancellationGate = WorkspaceCancellationGate()
 
     nonisolated static func shouldSuppressApplicationWindows(
         frontmostProcessIdentifier: pid_t?,
@@ -98,8 +99,14 @@ final class ActionExecutor {
             }
         }
 
-        if participatesInWorkspaceCancellation(action), WorkspaceOverviewDetector.isActive() {
-            return cancelActiveWorkspaceOverview(language: language)
+        if participatesInWorkspaceCancellation(action) {
+            let decision = workspaceCancellationGate.decision(
+                now: ProcessInfo.processInfo.systemUptime,
+                overviewDetected: WorkspaceOverviewDetector.isActive()
+            )
+            if decision == .cancelAndDisarm {
+                return cancelActiveWorkspaceOverview(language: language)
+            }
         }
 
         switch action {
@@ -333,6 +340,10 @@ final class ActionExecutor {
         default:
             false
         }
+    }
+
+    func clearWorkspaceCancellationState() {
+        workspaceCancellationGate.clear()
     }
 
     private func cancelActiveWorkspaceOverview(language: AppLanguage) -> Result {
