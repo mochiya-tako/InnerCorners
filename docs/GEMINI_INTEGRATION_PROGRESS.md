@@ -67,6 +67,7 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 - `com.apple.apps.launcher`、旧OS用`com.apple.launchpad.launcher`、`com.apple.exposelauncher`、`com.apple.dock`だけを待機解除の例外とした。通常アプリへの切替と識別不能な通知は安全側で解除する。
 - ユーザー実機試験で、Apps完全表示から約5秒後のShow Desktop衝突がキャンセルとして処理されることを確認。
 - 続く高速試験では、Appsから約1.1〜1.4秒後のShow Desktop衝突を複数回キャンセルとして記録。意図しないApps／Spotlight表示の残留はユーザーから報告されなかった。
+- Mission Control、Application Windows、Show Desktop、Appsについて、同一機能への再衝突と異なる機能間の全方向を実機操作とOSログで確認。いずれも次の機能を重ねて起動せず`workspace-cancel-requested`として処理された。
 - build 70起動後のQuartzイベントタップは1本・`enabled=true`。
 
 ## 未検証・未完了
