@@ -1,12 +1,12 @@
 # Gemini統合進捗
 
-更新日: 2026-11-19 18:19 JST
+更新日: 2026-11-19 21:52 JST
 作業ブランチ: `codex/gemini-integration`  
 安定比較基準: `main` / `v0.11.0-rc.7`
 
 ## 現在の位置
 
-Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を進めている。現在の統合版は`InnerCorners GE` build 70。`main`の製品コードはRC7系のままで、統合版はまだ正式な日常利用版・配布候補ではない。
+Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を進めている。現在の統合版は`InnerCorners GE` build 71。`main`の製品コードはRC7系のままで、統合版はまだ正式な日常利用版・配布候補ではない。
 
 ## 完了した変更
 
@@ -25,18 +25,19 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 12. `bcb173e` — 画面収録権限に依存せず、別コーナー衝突によるワークスペース表示のキャンセル候補を追跡。
 13. `9e6dc07` — 別コーナーでのキャンセル時にEscapeを先行送信せず、直前に開いたMission Control系機能を再度呼ぶ方式へ変更。Appsの非同期表示とEscapeが前後して検索画面だけ残る競合を解消。
 14. build 70 — Apps／Launchpad／Mission Control／Dock自身のアプリ切替通知ではキャンセル待機を消さず、通常アプリへの切替とクリックでは消すよう通知境界を修正。
+15. build 71 — アプリ切替通知で得た前面アプリ情報を、切替直後の古い`NSWorkspace.frontmostApplication`再照会結果で上書きしないよう修正。
 
 ## 自動検証
 
-- `swift test`: 88件すべて合格。
+- `swift test`: 90件すべて合格。
 - `Scripts/run_self_tests.sh`: 合格。
 - Swift 6 release build（`-warnings-as-errors`）: 合格。
 - `Scripts/build_app.sh`: 合格。
 - アドホック署名検証: 合格。
 - ZIP再展開後の署名検証: 合格。
-- 生成ZIP SHA-256: `821df0995a47a9074cac2da927723c9f628ea255f0c35b459277a1ffead7c867`
+- 生成ZIP SHA-256: `26c81df7ddf91d5ac0a7f6eb61440cbd032476e2c0e105595d4288d7968730e2`
 
-生成物: `outputs/InnerCorners-GE-v0.12.0-build70-arm64.app.zip`（Git管理外）
+生成物: `outputs/InnerCorners-GE-v0.12.0-build71-arm64.app.zip`（Git管理外）
 
 ## build 66 実機安全試験
 
@@ -72,6 +73,14 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 - build 70を`pmset sleepnow`で実スリープさせ、同一PIDで復帰。復帰直後は壁を停止した安全確認状態を維持し、5秒以上経過後にカーソルを画面中央へ移すと壁を再開した。再開後もイベントタップ1本・`enabled=true`で、復帰中の誤発火は記録されなかった。
 - 3画面をL字配置へ変更する過程の複数通知すべてで安全待機へ入り、各回5秒以上経過後に壁を再開。変更後は画面1・2・3それぞれの内部コーナーを実機操作し、ログ上の進入元と対象画面が一致した。別画面の同座標角への取り違え、誤発火、クラッシュは記録されなかった。
 - 一時停止中はQuartzイベントタップが0本となり、L字配置の3つの内部コーナーを自由に通過できた。一時停止解除後はイベントタップ1本・`enabled=true`へ戻り、壁停止、Mission Control発火、別コーナーでのキャンセル、再発火が正常に復帰した。
+
+## build 71 除外アプリ試験
+
+- Finderを除外し「アクションのみ」で試験。イベントタップ1本を維持し、壁は作動、アクションは抑制された。
+- 抑制範囲を「バリアとアクション」へ変更した初回試験では、Finderウインドウ前面でも壁経路のApps発火を記録。保存設定自体は`com.apple.finder`・`barriersAndActions`で正しかった。
+- 原因は、`didActivateApplicationNotification`が持つ正しいFinder情報を、切替直後の`NSWorkspace.frontmostApplication`再照会結果で上書きしていた競合と判断。通知のアプリ名・Bundle ID・PIDを優先するよう修正し、通知情報優先の回帰テストを追加。
+- build 71で同じFinderウインドウ前面試験を再実施。3つの内部コーナーで壁・アクションとも抑制され、OSログにも発火は記録されなかった。Codexへ戻るとイベントタップ1本へ復帰。
+- 試験後、Finderを除外一覧から削除し、抑制範囲を試験前の「アクションのみ」へ復元。保存データで除外一覧が空であることを確認した。
 
 ## 未検証・未完了
 

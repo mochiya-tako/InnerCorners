@@ -223,17 +223,23 @@ final class AppModel: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            let activatedBundleIdentifier = (
-                notification.userInfo?[NSWorkspace.applicationUserInfoKey]
-                    as? NSRunningApplication
-            )?.bundleIdentifier
+            let activatedApplication = notification.userInfo?[
+                NSWorkspace.applicationUserInfoKey
+            ] as? NSRunningApplication
+            let activationSnapshot = activatedApplication.map {
+                FrontmostApplicationSnapshot(
+                    localizedName: $0.localizedName,
+                    bundleIdentifier: $0.bundleIdentifier,
+                    processIdentifier: $0.processIdentifier
+                )
+            }
             MainActor.assumeIsolated {
                 if WorkspaceActivationPolicy.shouldClearCancellationState(
-                    activatedBundleIdentifier: activatedBundleIdentifier
+                    activatedBundleIdentifier: activationSnapshot?.bundleIdentifier
                 ) {
                     self?.executor.clearWorkspaceCancellationState()
                 }
-                self?.refreshFrontmostApplication()
+                self?.refreshFrontmostApplication(activationSnapshot: activationSnapshot)
             }
         }
         mouseDownMonitor = NSEvent.addGlobalMonitorForEvents(
@@ -757,11 +763,22 @@ final class AppModel: ObservableObject {
         eventPostingGranted = capabilities.eventPosting
     }
 
-    private func refreshFrontmostApplication() {
-        let app = NSWorkspace.shared.frontmostApplication
-        frontmostApplicationName = app?.localizedName ?? text(ja: "不明", en: "Unknown")
-        frontmostApplicationBundleID = app?.bundleIdentifier
-        if (preferences.pauseInFullscreenApps || isSettingsWindowVisible), let pid = app?.processIdentifier {
+    private func refreshFrontmostApplication(
+        activationSnapshot: FrontmostApplicationSnapshot? = nil
+    ) {
+        let snapshot = FrontmostApplicationSnapshot.resolved(
+            activationNotification: activationSnapshot,
+            currentQuery: NSWorkspace.shared.frontmostApplication.map {
+                FrontmostApplicationSnapshot(
+                    localizedName: $0.localizedName,
+                    bundleIdentifier: $0.bundleIdentifier,
+                    processIdentifier: $0.processIdentifier
+                )
+            }
+        )
+        frontmostApplicationName = snapshot?.localizedName ?? text(ja: "不明", en: "Unknown")
+        frontmostApplicationBundleID = snapshot?.bundleIdentifier
+        if (preferences.pauseInFullscreenApps || isSettingsWindowVisible), let pid = snapshot?.processIdentifier {
             let activeQuartz = quartzDisplays.isEmpty ? DisplayProvider.currentQuartz() : quartzDisplays
             isFrontmostAppFullscreen = AppSuppressionPolicy.isProcessFullscreen(pid: pid, displays: activeQuartz)
         } else if !preferences.pauseInFullscreenApps {
