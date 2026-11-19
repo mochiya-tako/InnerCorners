@@ -167,6 +167,11 @@ final class CursorBarrierController {
 
     fileprivate func reenableTap() {
         if let tap {
+            // The pointer may have moved while the event tap was disabled. A
+            // stale previousLocation would turn the first recovered event into
+            // a fictitious long movement crossing one or more barriers.
+            clearTransientBarrierState()
+            synchronizePointerState()
             CGEvent.tapEnable(tap: tap, enable: true)
             reportRunningStatus()
         }
