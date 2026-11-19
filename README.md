@@ -6,15 +6,15 @@
 
 | Download | ダウンロード | Link |
 | --- | --- | --- |
-| GE Beta 1 app — Apple Silicon | GE Beta 1アプリ — Apple Silicon | GitHub release pending / GitHub公開待ち |
+| GE Beta 1 app — Apple Silicon | GE Beta 1アプリ — Apple Silicon | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
 | Stable comparison RC — Apple Silicon | 安定比較用RC — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
 | All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
 | Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
 
 > [!IMPORTANT]
-> GE Beta 1 is a locally validated pre-release and has not yet been published as a GitHub Release. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
+> GE Beta 1 is a locally validated GitHub pre-release. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
 >
-> GE Beta 1はローカル検証済みですが、GitHub Releaseにはまだ公開していません。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
+> GE Beta 1はローカル検証済みのGitHubプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
 
 ## English
 

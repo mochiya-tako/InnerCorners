@@ -17,7 +17,7 @@
 | 公証 | 未実施 |
 | 公開区分 | ローカル検証済みbeta候補／個人試用段階 |
 
-安定比較版RC7はGitHub Releasesの[`v0.11.0-rc.7`](https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.11.0-rc.7)に置かれている。GE Beta 1はローカル検証済みだが、GitHub Releaseにはまだ公開していない。
+安定比較版RC7はGitHub Releasesの[`v0.11.0-rc.7`](https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.11.0-rc.7)に置かれている。GE Beta 1は[`v0.12.0-beta.1`](https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.12.0-beta.1)としてプレリリース済み。
 
 ## 2. 実装済み
 
@@ -82,7 +82,7 @@
 
 - GitHubリポジトリは非公開である。
 - RC7アプリは安定比較用プレリリースとしてダウンロード可能である。
-- GE Beta 1のアプリ／ソースZIPはローカル生成済み。統合ブランチはGitHubへプッシュ済みだが、Releaseは未作成。
+- GE Beta 1の統合ブランチ、タグ、プレリリース、アプリ／ソースZIPはGitHubと同期済み。
 - 現行ZIPはアドホック署名であり、一般利用者向けの公証済み配布物ではない。
 - App Store公開は予定せず、将来公開する場合もGitHub Releasesを主経路とする方針である。
 - ソースアーカイブは`Scripts/build_source_archive.sh`、アプリは`Scripts/build_app.sh`から生成する。
@@ -93,7 +93,7 @@
 
 1. beta向けREADME、CHANGELOG、REVIEW、STATUSと生成物名を最終確認する。
 2. クリーンビルド、90件のテスト、アプリ／ソースZIPの再現性を確認する。
-3. Beta 1 Releaseをプレリリースとして作成し、アプリ／ソースZIPとSHA-256を登録する。
+3. Beta 1の通常使用でバグを記録し、必要な修正は次のbeta候補として分離する。
 4. `main`への統合はbeta公開・追加試用とは分けて判断する。
 5. 長時間常駐CPU・メモリ、1000 Hz級マウス、Sidecar、別Mac、旧対応macOSを順次検証する。
 6. 一般公開段階ではDeveloper ID署名・公証を行い、Gatekeeper有効の別Macで確認する。
