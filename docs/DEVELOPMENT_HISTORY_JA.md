@@ -189,3 +189,10 @@ swift build -c release
 
 権限不要のテスト音は実GUIから実行し、状態表示まで更新されることを確認済みです。Mission Control等の合成キー送信は実機で作動しなかったため、v0.6.2では壁への衝突時に現在のDockホットコーナー設定を読み、Apple純正システムアプリをLaunchServices経由で起動します。
 公開用ソースZIPは `Scripts/build_source_archive.sh` で生成します。`outputs/`は除外し、同梱する日本語文書は `docs/ROADMAP.md` と `docs/HOT_CORNER_SURVEY.md` のASCII名へ変換するため、macOS標準の`/usr/bin/unzip`でも展開できます。
+
+## 2026-11-19 開発環境修復と全自動テスト
+
+- 混在していたCommand Line Toolsを27.2としてクリーン再導入し、Swift 6.4.2／macOS SDK 27.2でreleaseビルドと配布用アプリ生成に合格。
+- XCTestを含むXcode 27.2（build 27B52）を導入し、既定の開発者ディレクトリを`/Applications/Xcode.app/Contents/Developer`へ変更。
+- 初回の全テストで、ASM画面（`y=-119...961`）の右下厳密角テストだけがLG画面下端`y=1080`を誤って使用していたことを検出。期待座標を実際のASM右下`(0, 961)`と補正後座標`(-0.5, 960.5)`へ訂正した。製品コードは変更していない。
+- 訂正後、通常の`swift test`でXCTest 60件すべてに合格。

@@ -77,12 +77,12 @@ final class CursorBarrierGeometryTests: XCTestCase {
         let barriers = CursorBarrierGeometry.barriers(for: [lg, asm], length: 88)
         let contact = try XCTUnwrap(CursorBarrierGeometry.cornerContact(
             from: CGPoint(x: -100, y: 900),
-            to: CGPoint(x: 0, y: 1080),
+            to: CGPoint(x: 0, y: 961),
             barriers: barriers.filter { $0.displayID == 3 }
         ))
 
         XCTAssertEqual(contact.barrier.corner, .bottomRight)
-        XCTAssertEqual(contact.point, CGPoint(x: -0.5, y: 1079.5))
+        XCTAssertEqual(contact.point, CGPoint(x: -0.5, y: 960.5))
     }
 
     func testRemainingAtExactCornerDoesNotCreateRepeatedContact() {

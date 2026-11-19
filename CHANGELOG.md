@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### Fixed
+
+- ASM画面の右下厳密角テストが、実際の画面下端`y=961`ではなくLG画面下端`y=1080`を使用していた誤りを訂正。製品コードの変更はなし。
+
+### Verification
+
+- Xcode 27.2（Swift 6.4.2／macOS SDK 27.2）を既定の開発環境として導入し、XCTest 60件すべてに合格。
+- `swift build -c release`、配布用アプリ生成、アドホック署名、ZIP再展開後の署名検証に合格。
+
 ### Documentation
 
 - 設計・レビュー・現在状況を`DESIGN.md`、`REVIEW.md`、`STATUS.md`へ分離して記録。
