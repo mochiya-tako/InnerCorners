@@ -18,6 +18,19 @@ final class SpeedBumpGateTests: XCTestCase {
         )
     }
 
+    private var oppositeTopRightBarrier: CursorBarrier {
+        CursorBarrier(
+            id: "2:topRight:right",
+            displayID: 2,
+            corner: .topRight,
+            axis: .vertical,
+            coordinate: 0,
+            span: -40...40,
+            ownerSide: .lowerCoordinate,
+            ownerFrame: CGRect(x: -2560, y: 0, width: 2560, height: 1080)
+        )
+    }
+
     func testAlwaysBlockModeNeverOpens() {
         var gate = SpeedBumpGate()
         XCTAssertEqual(
@@ -83,6 +96,21 @@ final class SpeedBumpGateTests: XCTestCase {
         // Pause longer than maxSampleGap (0.25s)
         XCTAssertEqual(
             gate.evaluateCollision(barrier: topLeftBarrier, now: 10.40, mode: .speedBump, holdDuration: 0.30),
+            .block
+        )
+    }
+
+    func testImmediateReverseDirectionRelocksWithoutNonCollidingSample() {
+        var gate = SpeedBumpGate()
+        _ = gate.evaluateCollision(barrier: topLeftBarrier, now: 10.00, mode: .speedBump, holdDuration: 0.30)
+        _ = gate.evaluateCollision(barrier: topLeftBarrier, now: 10.20, mode: .speedBump, holdDuration: 0.30)
+        XCTAssertEqual(
+            gate.evaluateCollision(barrier: topLeftBarrier, now: 10.35, mode: .speedBump, holdDuration: 0.30),
+            .allowPassage
+        )
+
+        XCTAssertEqual(
+            gate.evaluateCollision(barrier: oppositeTopRightBarrier, now: 10.36, mode: .speedBump, holdDuration: 0.30),
             .block
         )
     }

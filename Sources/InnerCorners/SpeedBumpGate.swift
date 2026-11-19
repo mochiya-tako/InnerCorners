@@ -40,7 +40,14 @@ struct SpeedBumpGate {
         }
 
         if let unlockedBarrier, CursorBarrierGeometry.sameJunction(unlockedBarrier, barrier) {
-            return .allowPassage
+            if unlockedBarrier.id == barrier.id {
+                return .allowPassage
+            }
+            // A junction has one directional barrier per owning display. If
+            // the first sample after passage is already an opposite-direction
+            // collision, re-lock immediately instead of requiring an
+            // intermediate non-colliding sample.
+            self.unlockedBarrier = nil
         }
 
         let effectiveHold = max(0.05, holdDuration)
