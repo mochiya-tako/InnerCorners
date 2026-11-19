@@ -5,23 +5,23 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>ja</string>
     <key>CFBundleDisplayName</key>
-    <string>InnerCorners Gemini</string>
+    <string>InnerCorners GE</string>
     <key>CFBundleExecutable</key>
     <string>InnerCorners</string>
     <key>CFBundleIdentifier</key>
-    <string>local.prototype.InnerCorners.Gemini</string>
+    <string>local.prototype.InnerCorners.GE</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
     <key>CFBundleName</key>
-    <string>InnerCorners Gemini</string>
+    <string>InnerCorners GE</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
     <string>0.12.0</string>
     <key>CFBundleVersion</key>
-    <string>64</string>
+    <string>66</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>LSUIElement</key>

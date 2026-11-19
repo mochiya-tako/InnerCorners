@@ -534,7 +534,7 @@ final class AppModel: ObservableObject {
 
     func copyDiagnostics() {
         var lines = [
-            "InnerCorners Gemini Edition \(versionDescription)",
+            "InnerCorners GE \(versionDescription)",
             ProcessInfo.processInfo.operatingSystemVersionString,
             "accessibility=\(accessibilityGranted)",
             "eventPosting=\(eventPostingGranted)",

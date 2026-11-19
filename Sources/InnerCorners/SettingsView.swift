@@ -46,7 +46,7 @@ struct SettingsView: View {
     private var topLanguageHeaderBar: some View {
         HStack(spacing: 12) {
             Label(
-                "InnerCorners Gemini",
+                "InnerCorners GE",
                 systemImage: model.cursorControlActive ? "shield.checkered" : "shield"
             )
             .font(.headline)
@@ -130,8 +130,8 @@ struct SettingsView: View {
                             ))
                             .font(.subheadline.weight(.semibold))
                             Text(model.text(
-                                ja: "壁（バリア）やMission Control・デスクトップ・アプリ表示は現在そのまま動作していますが、キー送信を伴うアクション（クイックメモ／通知センター／ロック画面）を使うには「システム設定 ＞ プライバシーとセキュリティ ＞ アクセシビリティ」で InnerCorners Gemini をオンにしてください。",
-                                en: "Barriers, Mission Control, Show Desktop, and Apps work immediately, but key-driven actions (Quick Note, Notification Center, Lock Screen) require enabling InnerCorners Gemini in System Settings > Privacy & Security > Accessibility."
+                                ja: "壁（バリア）やMission Control・デスクトップ・アプリ表示は現在そのまま動作していますが、キー送信を伴うアクション（クイックメモ／通知センター／ロック画面）を使うには「システム設定 ＞ プライバシーとセキュリティ ＞ アクセシビリティ」で InnerCorners GE をオンにしてください。",
+                                en: "Barriers, Mission Control, Show Desktop, and Apps work immediately, but key-driven actions (Quick Note, Notification Center, Lock Screen) require enabling InnerCorners GE in System Settings > Privacy & Security > Accessibility."
                             ))
                             .font(.caption)
                             .foregroundStyle(.secondary)

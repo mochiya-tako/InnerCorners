@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR=${0:A:h}
 PROJECT_DIR=${SCRIPT_DIR:h}
-TEST_BUILD_DIR="${TMPDIR%/}/InnerCorners-Gemini-self-tests"
+TEST_BUILD_DIR="${TMPDIR%/}/InnerCorners-GE-self-tests"
 rm -rf "$TEST_BUILD_DIR"
 mkdir -p "$TEST_BUILD_DIR"
 
@@ -91,7 +91,7 @@ struct SelfTestRunner {
         check(roundTripped.modifierRequirement(displayID: "d1", corner: .topRight) == .controlCommand)
         check(roundTripped.action(displayID: "d1", corner: .topRight) == .screenshotSelection)
 
-        print("All Gemini Edition self-tests passed!")
+        print("All InnerCorners GE self-tests passed!")
     }
 }
 EOF
