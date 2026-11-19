@@ -106,7 +106,7 @@ This does not establish compatibility with every Mac, display, pointing device, 
 - Option-modified hot-corner assignments are intentionally unsupported because Option is reserved for emergency passage.
 - Disabling the screen saver remains unimplemented because no sufficiently safe public API equivalent has been confirmed.
 
-See [English development summary](docs/DEVELOPMENT_HISTORY_EN.md) and [full Japanese development history](docs/DEVELOPMENT_HISTORY_JA.md).
+See [development plan](DEVELOPMENT_PLAN.md), [English development summary](docs/DEVELOPMENT_HISTORY_EN.md), and [full Japanese development history](docs/DEVELOPMENT_HISTORY_JA.md).
 
 ---
 
@@ -201,4 +201,4 @@ RC7はApple Silicon Mac・macOS 27.0.1で、2画面および3画面の横一列�
 - Optionは緊急通過に予約しているため、Option付きホットコーナー割当には非対応
 - 十分安全な公開APIを確認できていないため、スクリーンセーバ無効化は未実装
 
-[英語の開発概要](docs/DEVELOPMENT_HISTORY_EN.md)および[日本語の完全な開発履歴](docs/DEVELOPMENT_HISTORY_JA.md)を参照してください。
+[今後の開発方針](DEVELOPMENT_PLAN.md)、[英語の開発概要](docs/DEVELOPMENT_HISTORY_EN.md)および[日本語の完全な開発履歴](docs/DEVELOPMENT_HISTORY_JA.md)を参照してください。

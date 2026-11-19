@@ -86,16 +86,21 @@
 
 通常使用によるバグ取りを優先する。問題が見つからない期間に、次を順次進める。
 
-1. 長時間常駐時のCPU・メモリと、イベントタップ停止の有無を記録する。
-2. 1000 Hz級マウス、Sidecar、別Mac、旧対応macOSの検証環境を確保する。
-3. 公開時にDeveloper ID署名・公証を行い、Gatekeeper有効の別Macで確認する。
-4. 上記結果と既知制限を反映して、RC表記を外すか判断する。
+1. [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)に従い、Gemini版ソースを固定してRC7との差分を再検証する。
+2. Gemini版を起点とする統合ブランチを作り、Xcode 27.2でビルドと既存テストを実行する。
+3. レビューで指摘された安全機構の統合テストと修正を、新機能の正式受入より先に行う。
+4. コーナー別の壁有効／無効を、最初の機能受入候補として評価する。
+5. 長時間常駐時のCPU・メモリと、イベントタップ停止の有無を記録する。
+6. 1000 Hz級マウス、Sidecar、別Mac、旧対応macOSの検証環境を確保する。
+7. 公開時にDeveloper ID署名・公証を行い、Gatekeeper有効の別Macで確認する。
+8. 上記結果と既知制限を反映して、RC表記を外すか判断する。
 
 ## 7. 関連文書
 
 - [DESIGN.md](DESIGN.md) — 設計思想・仕様
 - [CHANGELOG.md](CHANGELOG.md) — 版ごとの開発履歴
 - [REVIEW.md](REVIEW.md) — レビュー結果と未解決事項
+- [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) — 今後の開発方針と段階的統合計画
 - [README.md](README.md) — 利用者向け概要・ダウンロード
 - [日本語の詳細開発履歴](docs/DEVELOPMENT_HISTORY_JA.md)
 - [English development summary](docs/DEVELOPMENT_HISTORY_EN.md)
