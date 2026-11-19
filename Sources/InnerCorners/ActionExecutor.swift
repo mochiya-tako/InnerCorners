@@ -29,6 +29,13 @@ final class ActionExecutor {
         }
     }
 
+    nonisolated static func shouldSuppressApplicationWindows(
+        frontmostProcessIdentifier: pid_t?,
+        currentProcessIdentifier: pid_t
+    ) -> Bool {
+        frontmostProcessIdentifier == currentProcessIdentifier
+    }
+
     func perform(
         _ action: CornerAction,
         assignment: CornerAssignment? = nil,
@@ -74,6 +81,12 @@ final class ActionExecutor {
         case .missionControl:
             return runMissionControlDocklet(argument: nil, language: language)
         case .applicationWindows:
+            guard !Self.shouldSuppressApplicationWindows(
+                frontmostProcessIdentifier: NSWorkspace.shared.frontmostApplication?.processIdentifier,
+                currentProcessIdentifier: ProcessInfo.processInfo.processIdentifier
+            ) else {
+                return applicationWindowsSelfSuppressed(language: language)
+            }
             return runMissionControlDocklet(argument: "2", language: language)
         case .showDesktop:
             return runMissionControlDocklet(argument: "1", language: language)
@@ -203,6 +216,12 @@ final class ActionExecutor {
         case .missionControl:
             return runMissionControlDocklet(argument: nil, language: language)
         case .applicationWindows:
+            guard !Self.shouldSuppressApplicationWindows(
+                frontmostProcessIdentifier: NSWorkspace.shared.frontmostApplication?.processIdentifier,
+                currentProcessIdentifier: ProcessInfo.processInfo.processIdentifier
+            ) else {
+                return applicationWindowsSelfSuppressed(language: language)
+            }
             return runMissionControlDocklet(argument: "2", language: language)
         case .showDesktop:
             return runMissionControlDocklet(argument: "1", language: language)
@@ -245,6 +264,14 @@ final class ActionExecutor {
         case .unknown:
             return .unsupported(action.title(language: language))
         }
+    }
+
+    private func applicationWindowsSelfSuppressed(language: AppLanguage) -> Result {
+        .skipped(L10n.text(
+            language,
+            ja: "設定画面が前面のため抑制",
+            en: "Suppressed while Settings is frontmost"
+        ))
     }
 
     private func preferenceSuffix(for corner: Corner) -> String {
