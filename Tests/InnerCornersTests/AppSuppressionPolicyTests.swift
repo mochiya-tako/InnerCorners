@@ -80,4 +80,60 @@ final class AppSuppressionPolicyTests: XCTestCase {
             displays: displays
         ))
     }
+
+    func testEveryBarrierSuppressionReasonPreservesPendingSafetyState() {
+        let now = Date(timeIntervalSince1970: 1_000)
+
+        var excludedPreferences = Preferences()
+        excludedPreferences.excludedBundleIdentifiers = ["com.example.Game"]
+        excludedPreferences.suppressionScope = .barriersAndActions
+        let excluded = AppSuppressionPolicy.evaluate(
+            now: now,
+            pausedUntil: nil,
+            frontmostBundleID: "com.example.Game",
+            isFrontmostFullscreen: false,
+            preferences: excludedPreferences
+        )
+
+        var fullscreenPreferences = Preferences()
+        fullscreenPreferences.pauseInFullscreenApps = true
+        fullscreenPreferences.suppressionScope = .barriersAndActions
+        let fullscreen = AppSuppressionPolicy.evaluate(
+            now: now,
+            pausedUntil: nil,
+            frontmostBundleID: "com.example.Game",
+            isFrontmostFullscreen: true,
+            preferences: fullscreenPreferences
+        )
+
+        let timer = AppSuppressionPolicy.evaluate(
+            now: now,
+            pausedUntil: Date(timeIntervalSince1970: 1_300),
+            frontmostBundleID: nil,
+            isFrontmostFullscreen: false,
+            preferences: Preferences()
+        )
+
+        XCTAssertTrue(excluded.shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: true))
+        XCTAssertTrue(fullscreen.shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: true))
+        XCTAssertTrue(timer.shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: true))
+    }
+
+    func testActionsOnlyExclusionDoesNotStopOrPreserveBarrierController() {
+        var preferences = Preferences()
+        preferences.excludedBundleIdentifiers = ["com.example.Editor"]
+        preferences.suppressionScope = .actionsOnly
+
+        let state = AppSuppressionPolicy.evaluate(
+            now: Date(timeIntervalSince1970: 1_000),
+            pausedUntil: nil,
+            frontmostBundleID: "com.example.Editor",
+            isFrontmostFullscreen: false,
+            preferences: preferences
+        )
+
+        XCTAssertTrue(state.shouldSuppressActions)
+        XCTAssertFalse(state.shouldSuppressBarriers)
+        XCTAssertFalse(state.shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: true))
+    }
 }
