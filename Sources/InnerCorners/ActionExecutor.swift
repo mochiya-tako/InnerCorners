@@ -99,13 +99,17 @@ final class ActionExecutor {
             }
         }
 
-        if participatesInWorkspaceCancellation(action) {
+        if let cancellationTarget = workspaceCancellationTarget(for: action, zone: zone) {
             let decision = workspaceCancellationGate.decision(
+                target: cancellationTarget,
                 now: ProcessInfo.processInfo.systemUptime,
                 overviewDetected: WorkspaceOverviewDetector.isActive()
             )
-            if decision == .cancelAndDisarm {
-                return cancelActiveWorkspaceOverview(language: language)
+            if case .cancelAndDisarm(let previousTarget) = decision {
+                return cancelActiveWorkspaceOverview(
+                    target: previousTarget,
+                    language: language
+                )
             }
         }
 
@@ -333,12 +337,37 @@ final class ActionExecutor {
         ))
     }
 
-    private func participatesInWorkspaceCancellation(_ action: CornerAction) -> Bool {
+    private func workspaceCancellationTarget(
+        for action: CornerAction,
+        zone: HotZone
+    ) -> WorkspaceCancellationTarget? {
         switch action {
-        case .systemHotCorner, .missionControl, .applicationWindows, .showDesktop, .launchpad:
-            true
+        case .systemHotCorner:
+            let suffix = preferenceSuffix(for: zone.corner)
+            let dockValue = UserDefaults(suiteName: "com.apple.dock")?
+                .integer(forKey: "wvous-\(suffix)-corner") ?? 0
+            switch SystemHotCornerAction(dockValue: dockValue) {
+            case .missionControl:
+                return WorkspaceCancellationTarget.missionControl
+            case .applicationWindows:
+                return WorkspaceCancellationTarget.applicationWindows
+            case .showDesktop:
+                return WorkspaceCancellationTarget.showDesktop
+            case .apps:
+                return WorkspaceCancellationTarget.apps
+            default:
+                return nil
+            }
+        case .missionControl:
+            return WorkspaceCancellationTarget.missionControl
+        case .applicationWindows:
+            return WorkspaceCancellationTarget.applicationWindows
+        case .showDesktop:
+            return WorkspaceCancellationTarget.showDesktop
+        case .launchpad:
+            return WorkspaceCancellationTarget.apps
         default:
-            false
+            return nil
         }
     }
 
@@ -346,7 +375,35 @@ final class ActionExecutor {
         workspaceCancellationGate.clear()
     }
 
-    private func cancelActiveWorkspaceOverview(language: AppLanguage) -> Result {
+    private func cancelActiveWorkspaceOverview(
+        target: WorkspaceCancellationTarget?,
+        language: AppLanguage
+    ) -> Result {
+        // Repeating the action which opened the active workspace view uses the
+        // same toggle path as a second macOS Hot Corner collision. This avoids
+        // racing an Escape event against an asynchronously opening Apps view.
+        let result: Result
+        switch target {
+        case .missionControl:
+            result = runMissionControlDocklet(argument: nil, language: language)
+        case .applicationWindows:
+            result = runMissionControlDocklet(argument: "2", language: language)
+        case .showDesktop:
+            result = runMissionControlDocklet(argument: "1", language: language)
+        case .apps:
+            result = openLaunchpadApplication(language: language)
+        case nil:
+            return postEscapeForDetectedWorkspace(language: language)
+        }
+        switch result {
+        case .requested, .performed:
+            return .cancelledActiveWorkspace
+        default:
+            return result
+        }
+    }
+
+    private func postEscapeForDetectedWorkspace(language: AppLanguage) -> Result {
         guard canPostEvents else { return .permissionRequired }
         let source = CGEventSource(stateID: .combinedSessionState)
         guard let keyDown = CGEvent(
@@ -364,6 +421,8 @@ final class ActionExecutor {
                 en: "Could not create the cancellation key event"
             ))
         }
+        keyDown.flags = []
+        keyUp.flags = []
         keyDown.post(tap: .cghidEventTap)
         keyUp.post(tap: .cghidEventTap)
         return .cancelledActiveWorkspace
