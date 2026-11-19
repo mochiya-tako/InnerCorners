@@ -3,6 +3,24 @@ import XCTest
 @testable import InnerCorners
 
 final class AppSuppressionPolicyTests: XCTestCase {
+    func testCompanionAppConflictSuppressesBothBarriersAndActionsRegardlessOfScope() {
+        var prefs = Preferences()
+        prefs.suppressionScope = .actionsOnly
+
+        let state = AppSuppressionPolicy.evaluate(
+            now: Date(timeIntervalSince1970: 1_000),
+            pausedUntil: nil,
+            frontmostBundleID: nil,
+            isFrontmostFullscreen: false,
+            isCompanionAppRunning: true,
+            preferences: prefs
+        )
+
+        XCTAssertTrue(state.isCompanionAppRunning)
+        XCTAssertTrue(state.shouldSuppressActions)
+        XCTAssertTrue(state.shouldSuppressBarriers)
+    }
+
     func testTemporaryPauseSuppressesBothBarriersAndActions() {
         let now = Date(timeIntervalSince1970: 1_000)
         let deadline = Date(timeIntervalSince1970: 1_300)

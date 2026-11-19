@@ -84,6 +84,7 @@ final class AppModel: ObservableObject {
             pausedUntil: pausedUntil,
             frontmostBundleID: frontmostApplicationBundleID,
             isFrontmostFullscreen: isFrontmostAppFullscreen,
+            isCompanionAppRunning: isCompanionAppRunning,
             preferences: preferences
         )
     }
@@ -180,9 +181,11 @@ final class AppModel: ObservableObject {
         emergencyHotKeyRegistered = emergencyHotKeyController.start()
         updateEmergencyHotKeyStatus()
         relocalizeState()
+        // Detect the stable RC app before display refresh can create an event
+        // tap. Two cursor controllers must never be active at the same time.
+        refreshCompanionAppStatus()
         refreshDisplays()
         refreshPermissionStatus()
-        refreshCompanionAppStatus()
         refreshFrontmostApplication()
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
@@ -432,6 +435,8 @@ final class AppModel: ObservableObject {
             .contains { $0.processIdentifier != currentPID && !$0.isTerminated }
         if isCompanionAppRunning != running {
             isCompanionAppRunning = running
+            refreshFrontmostSuppressionState()
+            refreshBarrier()
         }
     }
 
@@ -881,7 +886,12 @@ final class AppModel: ObservableObject {
             language: language
         )
         if preferences.barrierEnabled && state.shouldSuppressBarriers {
-            if state.isPausedByTimer {
+            if state.isCompanionAppRunning {
+                barrierStatus = text(
+                    ja: "接合部バリア：別バージョンの起動中（競合防止停止）",
+                    en: "Junction Barrier: Another version is running (conflict-safe stop)"
+                )
+            } else if state.isPausedByTimer {
                 barrierStatus = text(
                     ja: "接合部バリア：一時停止中",
                     en: "Junction Barrier: Temporarily paused"

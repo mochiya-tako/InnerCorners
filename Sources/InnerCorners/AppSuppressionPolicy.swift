@@ -5,14 +5,15 @@ struct AppSuppressionState: Equatable {
     var isPausedByTimer: Bool
     var isExcludedAppFrontmost: Bool
     var isFullscreenAppFrontmost: Bool
+    var isCompanionAppRunning: Bool
     var scope: SuppressionScope
 
     var shouldSuppressActions: Bool {
-        isPausedByTimer || isExcludedAppFrontmost || isFullscreenAppFrontmost
+        isCompanionAppRunning || isPausedByTimer || isExcludedAppFrontmost || isFullscreenAppFrontmost
     }
 
     var shouldSuppressBarriers: Bool {
-        if isPausedByTimer {
+        if isCompanionAppRunning || isPausedByTimer {
             return true
         }
         guard scope == .barriersAndActions else {
@@ -28,6 +29,7 @@ enum AppSuppressionPolicy {
         pausedUntil: Date?,
         frontmostBundleID: String?,
         isFrontmostFullscreen: Bool,
+        isCompanionAppRunning: Bool = false,
         preferences: Preferences
     ) -> AppSuppressionState {
         let timerActive = pausedUntil.map { $0 > now } ?? false
@@ -44,6 +46,7 @@ enum AppSuppressionPolicy {
             isPausedByTimer: timerActive,
             isExcludedAppFrontmost: excludedActive,
             isFullscreenAppFrontmost: fullscreenActive,
+            isCompanionAppRunning: isCompanionAppRunning,
             scope: preferences.suppressionScope
         )
     }
