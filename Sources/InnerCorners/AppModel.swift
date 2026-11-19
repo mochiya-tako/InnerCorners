@@ -887,6 +887,9 @@ final class AppModel: ObservableObject {
             disabledCornerKeys: disabledCornerKeys,
             passThroughMode: preferences.passThroughMode,
             speedBumpHoldMilliseconds: preferences.speedBumpHoldMilliseconds,
+            preserveSafetyStateWhenDisabled: state.shouldPreserveBarrierSafetyState(
+                whenBarrierIsEnabled: preferences.barrierEnabled
+            ),
             language: language
         )
         if preferences.barrierEnabled && state.shouldSuppressBarriers {

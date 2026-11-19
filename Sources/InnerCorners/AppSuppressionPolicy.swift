@@ -21,6 +21,10 @@ struct AppSuppressionState: Equatable {
         }
         return isExcludedAppFrontmost || isFullscreenAppFrontmost
     }
+
+    func shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: Bool) -> Bool {
+        whenBarrierIsEnabled && shouldSuppressBarriers
+    }
 }
 
 enum AppSuppressionPolicy {

@@ -89,6 +89,7 @@ final class CursorBarrierController {
         disabledCornerKeys: Set<String> = [],
         passThroughMode: BarrierPassThroughMode = .alwaysBlock,
         speedBumpHoldMilliseconds: Double = 300,
+        preserveSafetyStateWhenDisabled: Bool = false,
         language: AppLanguage
     ) {
         self.language = language
@@ -117,7 +118,7 @@ final class CursorBarrierController {
             onBarrierCount?(barriers.count)
             start()
         } else {
-            stop()
+            stop(preservingSafetyState: preserveSafetyStateWhenDisabled)
             onBarrierCount?(0)
             onStatus?(barrierStatus(L10n.text(language, ja: "停止中", en: "Stopped")))
         }

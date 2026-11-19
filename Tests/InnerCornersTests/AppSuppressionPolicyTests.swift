@@ -19,6 +19,8 @@ final class AppSuppressionPolicyTests: XCTestCase {
         XCTAssertTrue(state.isCompanionAppRunning)
         XCTAssertTrue(state.shouldSuppressActions)
         XCTAssertTrue(state.shouldSuppressBarriers)
+        XCTAssertTrue(state.shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: true))
+        XCTAssertFalse(state.shouldPreserveBarrierSafetyState(whenBarrierIsEnabled: false))
     }
 
     func testTemporaryPauseSuppressesBothBarriersAndActions() {
