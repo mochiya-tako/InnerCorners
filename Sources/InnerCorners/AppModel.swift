@@ -72,6 +72,7 @@ final class AppModel: ObservableObject {
     private var screenRefreshGeneration = 0
     private var pendingBarrierRefreshMode = BarrierRefreshMode.none
     private var isSleeping = false
+    private var displayConfigurationGate = DisplayConfigurationGate()
     private var isSettingsWindowVisible = false
     private var quartzDisplays: [QuartzDisplayDescriptor] = []
     private var emptyDisplayRetryCount = 0
@@ -531,6 +532,7 @@ final class AppModel: ObservableObject {
             "accessibility=\(accessibilityGranted)",
             "eventPosting=\(eventPostingGranted)",
             "eventTapActive=\(cursorControlActive)",
+            "displayConfigurationValid=\(displayConfigurationGate.isValid)",
             "barrierEnabled=\(preferences.barrierEnabled) barrierCount=\(barrierCount) length=\(Int(preferences.barrierLength)) mode=\(preferences.passThroughMode.rawValue)",
             "paused=\(isTemporarilyPaused) fullscreenApp=\(isFrontmostAppFullscreen) excludedApp=\(isFrontmostAppExcluded)",
             "displays=\(displays.count)"
@@ -594,6 +596,9 @@ final class AppModel: ObservableObject {
         let resolvedQuartz = quartz ?? DisplayProvider.currentQuartz()
         if !resolvedQuartz.isEmpty {
             quartzDisplays = resolvedQuartz
+            displayConfigurationGate.acceptUsableConfiguration()
+        } else if quartzDisplays.isEmpty {
+            displayConfigurationGate.invalidate()
         }
         refreshFrontmostSuppressionState()
         refreshBarrier()
@@ -619,6 +624,7 @@ final class AppModel: ObservableObject {
                 self.pendingBarrierRefreshMode = .none
                 let newQuartz = DisplayProvider.currentQuartz()
                 guard !newQuartz.isEmpty else {
+                    self.displayConfigurationGate.invalidate()
                     self.barrierController.stop(preservingSafetyState: true)
                     self.barrierCount = 0
                     self.barrierStatus = self.text(ja: "接合部バリア：画面構成の取得待ち（安全停止）", en: "Junction Barrier: Waiting for display configuration (safe stop)")
@@ -856,7 +862,17 @@ final class AppModel: ObservableObject {
 
     private func refreshBarrier() {
         guard !isSleeping else { return }
-        let activeQuartzDisplays = quartzDisplays.isEmpty ? DisplayProvider.currentQuartz() : quartzDisplays
+        guard displayConfigurationGate.isValid, !quartzDisplays.isEmpty else {
+            engine.suppressedZoneIDs = []
+            barrierController.stop(preservingSafetyState: true)
+            barrierCount = 0
+            barrierStatus = text(
+                ja: "接合部バリア：画面構成の取得待ち（安全停止）",
+                en: "Junction Barrier: Waiting for display configuration (safe stop)"
+            )
+            return
+        }
+        let activeQuartzDisplays = quartzDisplays
         let allStructuralBarriers = CursorBarrierGeometry.barriers(
             for: activeQuartzDisplays,
             length: preferences.barrierLength
