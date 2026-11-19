@@ -19,15 +19,19 @@ Gemini Edition v0.12.0（Info.plist build 64）を専用ブランチへ取り込
 6. `668df52` — 一時停止・除外・競合停止中も、スリープ／画面変更後の安全ゲートを保持。
 7. `061cdd7` — Quartz画面情報の取得失敗中は古いgeometryから壁を再開しない。
 8. `56f930c` — スピードバンプ通過直後の逆方向衝突を即時再ロック。
+9. `6a23c59` — 壁衝突時の修飾キー状態を保存し、非同期実行時の読み直しを防止。
+10. `1616df5` — アプリ起動・システムコマンドの非同期完了結果を履歴へ記録。
+11. `f16798e` — 一時停止・除外・フルスクリーン抑制の安全状態保持を組合せ試験。
 
 ## 自動検証
 
-- `swift test --disable-sandbox`: 75件すべて合格。
+- `swift test --disable-sandbox`: 79件すべて合格。
+- `Scripts/run_self_tests.sh`: 合格。
 - Swift 6 release build（`-warnings-as-errors`）: 合格。
 - `Scripts/build_app.sh`: 合格。
 - アドホック署名検証: 合格。
 - ZIP再展開後の署名検証: 合格。
-- 生成ZIP SHA-256: `3292c540196170362786058a5660dca5ae30ad2bf497c2126edc90d9fce7f67c`
+- 生成ZIP SHA-256: `80daa3761b4f83f638749106ab7ac570a2a86758aacc82e776084f3978533424`
 
 生成物: `outputs/InnerCorners-Gemini-v0.12.0-arm64.app.zip`（Git管理外）
 
@@ -39,7 +43,7 @@ Gemini Edition v0.12.0（Info.plist build 64）を専用ブランチへ取り込
 - 一時停止、アプリ除外、フルスクリーン抑制と安全待機の組合せ。
 - WindowServerによるイベントタップタイムアウトからの実復旧。
 - スピードバンプ直後の逆方向再衝突の実機確認（自動テストは追加済み）。
-- 追加アクションの非同期完了診断。
+- 追加アクションの実環境での非同期完了診断（記録経路と自動テストは追加済み）。
 - README、版番号、名称を`v0.12.0-beta.1`へ整える作業。
 
 ## 次の順序
