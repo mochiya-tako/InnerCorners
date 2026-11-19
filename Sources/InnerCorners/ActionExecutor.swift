@@ -29,6 +29,11 @@ final class ActionExecutor {
         }
     }
 
+    struct PermissionCapabilities: Equatable {
+        let accessibilityAPI: Bool
+        let eventPosting: Bool
+    }
+
     nonisolated static func shouldSuppressApplicationWindows(
         frontmostProcessIdentifier: pid_t?,
         currentProcessIdentifier: pid_t
@@ -151,8 +156,19 @@ final class ActionExecutor {
         }
     }
 
+    var permissionCapabilities: PermissionCapabilities {
+        PermissionCapabilities(
+            accessibilityAPI: AXIsProcessTrusted(),
+            eventPosting: CGPreflightPostEventAccess()
+        )
+    }
+
     var isAccessibilityGranted: Bool {
-        AXIsProcessTrusted() || CGPreflightPostEventAccess()
+        permissionCapabilities.accessibilityAPI
+    }
+
+    var canPostEvents: Bool {
+        permissionCapabilities.eventPosting
     }
 
     func systemHotCornerDescription(for corner: Corner, language: AppLanguage) -> String {
@@ -400,7 +416,7 @@ final class ActionExecutor {
         flags: CGEventFlags,
         language: AppLanguage
     ) -> Result {
-        guard CGPreflightPostEventAccess() || AXIsProcessTrusted() else {
+        guard canPostEvents else {
             return .permissionRequired
         }
         let source = CGEventSource(stateID: .combinedSessionState)

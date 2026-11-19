@@ -35,6 +35,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var pointerStatus = "角の反応領域外"
     @Published private(set) var hoveredZoneID: String?
     @Published private(set) var accessibilityGranted = false
+    @Published private(set) var eventPostingGranted = false
     @Published private(set) var cursorControlActive = false
     @Published private(set) var frontmostApplicationName = "不明"
     @Published private(set) var frontmostApplicationBundleID: String?
@@ -528,6 +529,7 @@ final class AppModel: ObservableObject {
             "InnerCorners Gemini Edition \(versionDescription)",
             ProcessInfo.processInfo.operatingSystemVersionString,
             "accessibility=\(accessibilityGranted)",
+            "eventPosting=\(eventPostingGranted)",
             "eventTapActive=\(cursorControlActive)",
             "barrierEnabled=\(preferences.barrierEnabled) barrierCount=\(barrierCount) length=\(Int(preferences.barrierLength)) mode=\(preferences.passThroughMode.rawValue)",
             "paused=\(isTemporarilyPaused) fullscreenApp=\(isFrontmostAppFullscreen) excludedApp=\(isFrontmostAppExcluded)",
@@ -715,7 +717,9 @@ final class AppModel: ObservableObject {
     }
 
     private func refreshPermissionStatus() {
-        accessibilityGranted = executor.isAccessibilityGranted
+        let capabilities = executor.permissionCapabilities
+        accessibilityGranted = capabilities.accessibilityAPI
+        eventPostingGranted = capabilities.eventPosting
     }
 
     private func refreshFrontmostApplication() {

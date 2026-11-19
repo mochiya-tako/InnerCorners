@@ -17,6 +17,23 @@ final class ActionExecutorResultTests: XCTestCase {
         ))
     }
 
+    func testPermissionCapabilitiesKeepAccessibilityAndEventPostingIndependent() {
+        let accessibilityOnly = ActionExecutor.PermissionCapabilities(
+            accessibilityAPI: true,
+            eventPosting: false
+        )
+        XCTAssertTrue(accessibilityOnly.accessibilityAPI)
+        XCTAssertFalse(accessibilityOnly.eventPosting)
+
+        let eventPostingOnly = ActionExecutor.PermissionCapabilities(
+            accessibilityAPI: false,
+            eventPosting: true
+        )
+        XCTAssertFalse(eventPostingOnly.accessibilityAPI)
+        XCTAssertTrue(eventPostingOnly.eventPosting)
+    }
+
+
     func testStableDiagnosticCodesDoNotIncludeFailureReasons() {
         XCTAssertEqual(ActionExecutor.Result.performed.diagnosticCode, "performed")
         XCTAssertEqual(ActionExecutor.Result.requested.diagnosticCode, "requested")

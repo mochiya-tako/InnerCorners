@@ -117,7 +117,7 @@ struct SettingsView: View {
                 }
             }
 
-            if !model.accessibilityGranted {
+            if !model.eventPostingGranted {
                 Section {
                     HStack(alignment: .center, spacing: 12) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -125,8 +125,8 @@ struct SettingsView: View {
                             .font(.title3)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(model.text(
-                                ja: "クイックメモ・通知センター・ロック画面にはアクセシビリティ権限が必要です",
-                                en: "Accessibility permission is required for Quick Note, Notification Center, and Lock Screen"
+                                ja: "クイックメモ・通知センター・ロック画面にはイベント送信の許可が必要です",
+                                en: "Event-posting permission is required for Quick Note, Notification Center, and Lock Screen"
                             ))
                             .font(.subheadline.weight(.semibold))
                             Text(model.text(
@@ -477,11 +477,17 @@ struct SettingsView: View {
     private var safetyAndDiagnosticsTab: some View {
         Form {
             Section(model.text(ja: "権限と安全機構", en: "Permissions & Safety")) {
-                LabeledContent(model.text(ja: "macOSの権限表示", en: "macOS Permission Status")) {
+                LabeledContent(model.text(ja: "アクセシビリティAPI", en: "Accessibility API")) {
                     Label(
                         model.accessibilityGranted ? model.text(ja: "許可を検出", en: "Detected") : model.text(ja: "許可を未検出", en: "Not Detected"),
                         systemImage: model.accessibilityGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
                     ).foregroundStyle(model.accessibilityGranted ? .green : .orange)
+                }
+                LabeledContent(model.text(ja: "キーボードイベント送信", en: "Keyboard Event Posting")) {
+                    Label(
+                        model.eventPostingGranted ? model.text(ja: "許可を検出", en: "Detected") : model.text(ja: "許可を未検出", en: "Not Detected"),
+                        systemImage: model.eventPostingGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+                    ).foregroundStyle(model.eventPostingGranted ? .green : .orange)
                 }
                 LabeledContent(model.text(ja: "実際のカーソル制御", en: "Actual Cursor Control")) {
                     Label(
