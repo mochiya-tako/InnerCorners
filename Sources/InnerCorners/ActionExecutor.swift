@@ -7,11 +7,13 @@ final class ActionExecutor {
     private enum VirtualKey {
         static let q: CGKeyCode = 12
         static let n: CGKeyCode = 45
+        static let escape: CGKeyCode = 53
     }
 
     enum Result {
         case performed
         case requested
+        case cancelledActiveWorkspace
         case permissionRequired
         case unsupported(String)
         case failed(String)
@@ -21,6 +23,7 @@ final class ActionExecutor {
             switch self {
             case .performed: "performed"
             case .requested: "requested"
+            case .cancelledActiveWorkspace: "workspace-cancel-requested"
             case .permissionRequired: "permission-required"
             case .unsupported: "unsupported"
             case .failed: "failed"
@@ -93,6 +96,10 @@ final class ActionExecutor {
                     en: "Required modifier (\(symbols)) not pressed (barrier only)"
                 ))
             }
+        }
+
+        if participatesInWorkspaceCancellation(action), WorkspaceOverviewDetector.isActive() {
+            return cancelActiveWorkspaceOverview(language: language)
         }
 
         switch action {
@@ -317,6 +324,38 @@ final class ActionExecutor {
             ja: "設定画面が前面のため抑制",
             en: "Suppressed while Settings is frontmost"
         ))
+    }
+
+    private func participatesInWorkspaceCancellation(_ action: CornerAction) -> Bool {
+        switch action {
+        case .systemHotCorner, .missionControl, .applicationWindows, .showDesktop, .launchpad:
+            true
+        default:
+            false
+        }
+    }
+
+    private func cancelActiveWorkspaceOverview(language: AppLanguage) -> Result {
+        guard canPostEvents else { return .permissionRequired }
+        let source = CGEventSource(stateID: .combinedSessionState)
+        guard let keyDown = CGEvent(
+            keyboardEventSource: source,
+            virtualKey: VirtualKey.escape,
+            keyDown: true
+        ), let keyUp = CGEvent(
+            keyboardEventSource: source,
+            virtualKey: VirtualKey.escape,
+            keyDown: false
+        ) else {
+            return .failed(L10n.text(
+                language,
+                ja: "キャンセル用キーイベントを作成できませんでした",
+                en: "Could not create the cancellation key event"
+            ))
+        }
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
+        return .cancelledActiveWorkspace
     }
 
     private func preferenceSuffix(for corner: Corner) -> String {

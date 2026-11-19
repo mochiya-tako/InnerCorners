@@ -156,6 +156,12 @@ final class HotCornerEngine {
                 ja: "\(current.displayName)・\(current.corner.title(language: language))：\(action.title(language: language))の実行を要求",
                 en: "\(current.displayName) · \(current.corner.title(language: language)): Requested \(action.title(language: language))"
             ))
+        case .cancelledActiveWorkspace:
+            onStatus?(L10n.text(
+                language,
+                ja: "表示中のMission Control系画面をキャンセルしました",
+                en: "Cancelled the active workspace overview"
+            ))
         case .permissionRequired:
             onStatus?(L10n.text(language, ja: "アクセシビリティ権限が必要です", en: "Accessibility permission is required"))
         case .unsupported(let reason):

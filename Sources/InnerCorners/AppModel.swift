@@ -575,6 +575,8 @@ final class AppModel: ObservableObject {
             status = text(ja: "テスト音を実行しました（キー送信なし）", en: "Test sound played (no keystrokes)")
         case .requested:
             status = text(ja: "予期せず非同期の実行要求になりました", en: "The test unexpectedly returned an asynchronous action request")
+        case .cancelledActiveWorkspace:
+            status = text(ja: "予期せず表示中画面のキャンセルになりました", en: "The test unexpectedly cancelled an active overview")
         case .permissionRequired:
             status = text(ja: "予期せず権限が必要と判定されました", en: "Permission was unexpectedly reported as required")
         case .unsupported(let reason):
@@ -817,6 +819,16 @@ final class AppModel: ObservableObject {
                 en: "\(sourceName) → \(display.name) · \(corner): \(actionName) (action requested)"
             ))
             diagnostic("Barrier action result: action requested")
+        case .cancelledActiveWorkspace:
+            status = text(
+                ja: "表示中のMission Control系画面をキャンセルしました",
+                en: "Cancelled the active workspace overview"
+            )
+            recordEvent(text(
+                ja: "\(sourceName) → \(display.name)・\(corner)：表示中の画面をキャンセル",
+                en: "\(sourceName) → \(display.name) · \(corner): Cancelled active overview"
+            ))
+            diagnostic("Barrier action result: workspace cancellation requested")
         case .permissionRequired:
             status = text(ja: "アクセシビリティ権限が必要です", en: "Accessibility permission is required")
             recordEvent(text(ja: "\(sourceName) → \(display.name)・\(corner)：権限不足", en: "\(sourceName) → \(display.name) · \(corner): Permission required"))
