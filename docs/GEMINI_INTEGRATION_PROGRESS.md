@@ -6,7 +6,7 @@
 
 ## 現在の位置
 
-Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を完了した。現在の統合版は`InnerCorners GE v0.12.0 Beta 1` build 71のローカル候補。`main`の製品コードはRC7系のままで、GitHub Releaseはまだ作成していない。
+Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を完了した。現在の統合版は`InnerCorners GE v0.12.0 Beta 1` build 71候補で、非公開GitHubリポジトリの`codex/gemini-integration`へプッシュ済み。`main`の製品コードはRC7系のままで、GitHub Releaseはまだ作成していない。
 
 ## 完了した変更
 
@@ -94,10 +94,10 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 
 - 長時間常駐、1000 Hz級マウス、Sidecar、別Mac、macOS 14／15／26の同等実機試験。
 - Developer ID署名、公証、Gatekeeper有効の別Macでの配布試験。
-- GitHubへのbetaブランチのプッシュとBeta 1 Release作成。
+- Beta 1 Release作成とアプリ／ソースZIPの登録。
 
 ## 次の順序
 
 1. beta向け文書・生成物を最終検証する。
-2. ユーザー承認後にGitHubへプッシュし、必要ならBeta 1 Releaseを作成する。
+2. Beta 1 Releaseをプレリリースとして作成し、生成済みZIPとSHA-256を登録する。
 3. `main`への統合はbeta公開・追加試用とは分けて判断する。

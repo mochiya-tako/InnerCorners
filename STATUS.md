@@ -9,7 +9,7 @@
 | バージョン | InnerCorners GE v0.12.0 Beta 1候補 |
 | build | 71 |
 | ブランチ | `codex/gemini-integration` |
-| ソース状態 | Git管理済み、GitHubへのbeta公開・プッシュ前 |
+| ソース状態 | Git管理済み、GitHubの非公開統合ブランチと同期済み |
 | リポジトリ | `mochiya-tako/InnerCorners` |
 | 最低対象 | macOS 14 |
 | 現行配布CPU | Apple Silicon（arm64） |
@@ -82,7 +82,7 @@
 
 - GitHubリポジトリは非公開である。
 - RC7アプリは安定比較用プレリリースとしてダウンロード可能である。
-- GE Beta 1のアプリ／ソースZIPはローカル生成済みで、GitHub公開前である。
+- GE Beta 1のアプリ／ソースZIPはローカル生成済み。統合ブランチはGitHubへプッシュ済みだが、Releaseは未作成。
 - 現行ZIPはアドホック署名であり、一般利用者向けの公証済み配布物ではない。
 - App Store公開は予定せず、将来公開する場合もGitHub Releasesを主経路とする方針である。
 - ソースアーカイブは`Scripts/build_source_archive.sh`、アプリは`Scripts/build_app.sh`から生成する。
@@ -93,7 +93,7 @@
 
 1. beta向けREADME、CHANGELOG、REVIEW、STATUSと生成物名を最終確認する。
 2. クリーンビルド、90件のテスト、アプリ／ソースZIPの再現性を確認する。
-3. ユーザー承認後に統合ブランチをGitHubへプッシュし、必要ならBeta 1 Releaseを作成する。
+3. Beta 1 Releaseをプレリリースとして作成し、アプリ／ソースZIPとSHA-256を登録する。
 4. `main`への統合はbeta公開・追加試用とは分けて判断する。
 5. 長時間常駐CPU・メモリ、1000 Hz級マウス、Sidecar、別Mac、旧対応macOSを順次検証する。
 6. 一般公開段階ではDeveloper ID署名・公証を行い、Gatekeeper有効の別Macで確認する。
