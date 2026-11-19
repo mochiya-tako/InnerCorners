@@ -131,6 +131,9 @@ final class AppModel: ObservableObject {
         }
 
         engine.onStatus = { [weak self] in self?.status = $0 }
+        executor.onAsyncCompletion = { [weak self] completion in
+            self?.handleAsyncCompletion(completion)
+        }
         barrierController.onStatus = { [weak self] message in
             self?.barrierStatus = message
             if ProcessInfo.processInfo.environment["INNERCORNERS_DIAGNOSTICS"] == "1" {
@@ -872,6 +875,28 @@ final class AppModel: ObservableObject {
     private func diagnostic(_ message: String) {
         guard ProcessInfo.processInfo.environment["INNERCORNERS_DIAGNOSTICS"] == "1" else { return }
         FileHandle.standardError.write(Data("\(message)\n".utf8))
+    }
+
+    private func handleAsyncCompletion(_ completion: ActionExecutor.AsyncCompletion) {
+        let operation = switch completion.operation {
+        case .applicationLaunch:
+            text(ja: "アプリ起動", en: "Application launch")
+        case .systemCommand:
+            text(ja: "システムコマンド", en: "System command")
+        }
+        if completion.succeeded {
+            recordEvent(text(
+                ja: "\(operation)：非同期処理が完了しました",
+                en: "\(operation): Asynchronous operation completed"
+            ))
+        } else {
+            status = text(
+                ja: "\(operation)の非同期処理に失敗しました",
+                en: "\(operation) failed asynchronously"
+            )
+            recordEvent(status)
+        }
+        diagnostic("Async action result: \(completion.operation.rawValue) \(completion.diagnosticCode)")
     }
 
     private func refreshBarrier() {

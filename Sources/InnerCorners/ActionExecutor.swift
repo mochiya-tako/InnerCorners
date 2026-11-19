@@ -34,6 +34,19 @@ final class ActionExecutor {
         let eventPosting: Bool
     }
 
+    struct AsyncCompletion: Equatable {
+        enum Operation: String {
+            case applicationLaunch = "application-launch"
+            case systemCommand = "system-command"
+        }
+
+        let operation: Operation
+        let succeeded: Bool
+        let diagnosticCode: String
+    }
+
+    var onAsyncCompletion: ((AsyncCompletion) -> Void)?
+
     nonisolated static func shouldSuppressApplicationWindows(
         frontmostProcessIdentifier: pid_t?,
         currentProcessIdentifier: pid_t
@@ -419,9 +432,17 @@ final class ActionExecutor {
         NSWorkspace.shared.openApplication(
             at: url,
             configuration: configuration
-        ) { _, error in
+        ) { [weak self] _, error in
             if let error, ProcessInfo.processInfo.environment["INNERCORNERS_DIAGNOSTICS"] == "1" {
                 FileHandle.standardError.write(Data("Docklet launch error: \(error)\n".utf8))
+            }
+            let completion = AsyncCompletion(
+                operation: .applicationLaunch,
+                succeeded: error == nil,
+                diagnosticCode: error == nil ? "completed" : "failed"
+            )
+            Task { @MainActor [weak self] in
+                self?.onAsyncCompletion?(completion)
             }
         }
         return .requested
@@ -475,6 +496,17 @@ final class ActionExecutor {
         process.arguments = arguments
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
+        process.terminationHandler = { [weak self] completedProcess in
+            let succeeded = completedProcess.terminationReason == .exit && completedProcess.terminationStatus == 0
+            let completion = AsyncCompletion(
+                operation: .systemCommand,
+                succeeded: succeeded,
+                diagnosticCode: succeeded ? "completed" : "exit-nonzero"
+            )
+            Task { @MainActor [weak self] in
+                self?.onAsyncCompletion?(completion)
+            }
+        }
         do {
             try process.run()
             return .requested

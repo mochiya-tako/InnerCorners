@@ -60,4 +60,22 @@ final class ActionExecutorResultTests: XCTestCase {
         XCTAssertEqual(ActionExecutor.Result.failed("private detail").diagnosticCode, "failed")
         XCTAssertEqual(ActionExecutor.Result.skipped("private detail").diagnosticCode, "skipped")
     }
+
+    func testAsyncCompletionUsesStableNonSensitiveDiagnosticCodes() {
+        let success = ActionExecutor.AsyncCompletion(
+            operation: .applicationLaunch,
+            succeeded: true,
+            diagnosticCode: "completed"
+        )
+        let failure = ActionExecutor.AsyncCompletion(
+            operation: .systemCommand,
+            succeeded: false,
+            diagnosticCode: "exit-nonzero"
+        )
+
+        XCTAssertEqual(success.operation.rawValue, "application-launch")
+        XCTAssertEqual(success.diagnosticCode, "completed")
+        XCTAssertEqual(failure.operation.rawValue, "system-command")
+        XCTAssertEqual(failure.diagnosticCode, "exit-nonzero")
+    }
 }
