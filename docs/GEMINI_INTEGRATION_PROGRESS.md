@@ -1,6 +1,6 @@
 # Gemini統合進捗
 
-更新日: 2026-11-19  
+更新日: 2026-11-19 17:03 JST
 作業ブランチ: `codex/gemini-integration`  
 安定比較基準: `main` / `v0.11.0-rc.7`
 
@@ -31,20 +31,32 @@ Gemini Edition v0.12.0（Info.plist build 64）を専用ブランチへ取り込
 - `Scripts/build_app.sh`: 合格。
 - アドホック署名検証: 合格。
 - ZIP再展開後の署名検証: 合格。
-- 生成ZIP SHA-256: `80daa3761b4f83f638749106ab7ac570a2a86758aacc82e776084f3978533424`
+- 生成ZIP SHA-256: `194fdb89119825956e725faeb2ab5c8057c634f50eb5a09f23bc2186d15f828f`
 
-生成物: `outputs/InnerCorners-Gemini-v0.12.0-arm64.app.zip`（Git管理外）
+生成物: `outputs/InnerCorners-GE-v0.12.0-build66-arm64.app.zip`（Git管理外）
+
+## build 66 実機安全試験
+
+製品名を`InnerCorners GE`、Bundle IDを`local.prototype.InnerCorners.GE`へ確定し、build 66として`/Applications/InnerCorners GE.app`へ配置した。旧build 65は`/Applications/InnerCorners GE build65 backup.app`へ退避してあり、削除していない。
+
+- macOSアクセシビリティ再許可後、Quartzイベントタップが1本・`enabled=true`になったことをOS側から確認。
+- GE単独待機時の観測CPU使用率は0.0%。
+- RC7を併起動すると、GE自身のイベントタップが1本から0本へ停止し、RC7側だけが1本を保持。
+- RC7終了後、GEのイベントタップが0本から1本へ自動復帰。
+- `⌃⌥⌘Q`をCGEventで送信すると、GEが終了。OSログにも緊急終了を記録。
+- 非常終了が保存した`barrierEnabled=false`を、他設定を維持したまま`true`へ復元して再起動。イベントタップ1本への復帰を確認。
+
+上記はプロセス、Quartzイベントタップ一覧、OSログで確認した実機結果。実際のコーナー衝突と発火は、カーソル自動ワープの危険を避けるため手動確認待ち。
 
 ## 未検証・未完了
 
-- 統合版アプリの実機起動とカーソル操作。
-- RC7系との同時起動時に、Gemini側イベントタップが実際に開始されないこと。
+- 統合版アプリの実際のコーナー衝突とアクション発火。
 - スリープ／復帰、画面切断／再接続、解像度・配置変更。
 - 一時停止、アプリ除外、フルスクリーン抑制と安全待機の組合せ。
 - WindowServerによるイベントタップタイムアウトからの実復旧。
 - スピードバンプ直後の逆方向再衝突の実機確認（自動テストは追加済み）。
 - 追加アクションの実環境での非同期完了診断（記録経路と自動テストは追加済み）。
-- README、版番号、名称を`v0.12.0-beta.1`へ整える作業。
+- READMEと版表記を`v0.12.0-beta.1`へ整える作業（製品名はInnerCorners GEへ改名済み）。
 
 ## 次の順序
 
