@@ -69,6 +69,7 @@ Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な
 - 続く高速試験では、Appsから約1.1〜1.4秒後のShow Desktop衝突を複数回キャンセルとして記録。意図しないApps／Spotlight表示の残留はユーザーから報告されなかった。
 - Mission Control、Application Windows、Show Desktop、Appsについて、同一機能への再衝突と異なる機能間の全方向を実機操作とOSログで確認。いずれも次の機能を重ねて起動せず`workspace-cancel-requested`として処理された。
 - build 70起動後のQuartzイベントタップは1本・`enabled=true`。
+- build 70を`pmset sleepnow`で実スリープさせ、同一PIDで復帰。復帰直後は壁を停止した安全確認状態を維持し、5秒以上経過後にカーソルを画面中央へ移すと壁を再開した。再開後もイベントタップ1本・`enabled=true`で、復帰中の誤発火は記録されなかった。
 
 ## 未検証・未完了
 
