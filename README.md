@@ -1,4 +1,4 @@
-# InnerCorners v0.11.0 RC7
+# InnerCorners
 
 [English](#english) | [日本語](#日本語)
 
@@ -6,14 +6,19 @@
 
 | Download | ダウンロード | Link |
 | --- | --- | --- |
-| Latest RC app — Apple Silicon | 最新RCアプリ — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
+| **Recommended: GE Beta 1 — Apple Silicon** | **推奨：GE Beta 1 — Apple Silicon** | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
+| Legacy comparison: RC7 — Apple Silicon | 旧版比較用：RC7 — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
 | All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
 | Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
 
 > [!IMPORTANT]
-> RC7 is a pre-release for testing. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
+> **GE Beta 1 is the recommended download for normal testing. RC7 is retained only as a legacy comparison and fallback.**
 >
-> RC7は試用向けのプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
+> **通常の試用にはGE Beta 1を推奨します。RC7は旧版との比較・切り分け用として残しています。**
+>
+> Both builds are ad-hoc signed and not notarized. Review the release notes and keep the emergency bypass and quit paths available while testing.
+>
+> どちらもアドホック署名で公証済みではありません。リリースノートを確認し、緊急通過と緊急終了を利用できる状態で試用してください。
 
 ## English
 
