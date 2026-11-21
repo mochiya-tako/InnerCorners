@@ -113,6 +113,10 @@ This does not establish compatibility with every Mac, display, pointing device, 
 - Option-modified hot-corner assignments are intentionally unsupported because Option is reserved for emergency passage.
 - Disabling the screen saver remains unimplemented because no sufficiently safe public API equivalent has been confirmed.
 
+### License
+
+InnerCorners is available under the [MIT License](LICENSE).
+
 See [development plan](DEVELOPMENT_PLAN.md), [English development summary](docs/DEVELOPMENT_HISTORY_EN.md), and [full Japanese development history](docs/DEVELOPMENT_HISTORY_JA.md).
 
 ---
@@ -213,5 +217,9 @@ GE Beta 1 build 71は90件の自動テストに合格し、Apple Silicon Mac・m
 - macOS 14、15、26では現行試験環境と同等の実アクション試験を行っていない
 - Optionは緊急通過に予約しているため、Option付きホットコーナー割当には非対応
 - 十分安全な公開APIを確認できていないため、スクリーンセーバ無効化は未実装
+
+### ライセンス
+
+InnerCornersは[MIT License](LICENSE)で公開しています。
 
 [今後の開発方針](DEVELOPMENT_PLAN.md)、[英語の開発概要](docs/DEVELOPMENT_HISTORY_EN.md)および[日本語の完全な開発履歴](docs/DEVELOPMENT_HISTORY_JA.md)を参照してください。

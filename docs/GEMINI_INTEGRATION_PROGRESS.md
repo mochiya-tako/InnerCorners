@@ -6,7 +6,7 @@
 
 ## 現在の位置
 
-Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を完了した。現在の統合版は`InnerCorners GE v0.12.0 Beta 1` build 71で、非公開GitHubリポジトの`codex/gemini-integration`とプレリリース`v0.12.0-beta.1`へ登録済み。`main`の製品コードはRC7系のままである。
+Gemini Edition v0.12.0を専用ブランチへ取り込み、Phase Bの主要な安全修正と限定実機試験を完了した。現在の統合版は`InnerCorners GE v0.12.0 Beta 1` build 71で、公開GitHubリポジトリの`codex/gemini-integration`とプレリリース`v0.12.0-beta.1`へ登録済み。`main`の製品コードはRC7系のままである。
 
 ## 完了した変更
 

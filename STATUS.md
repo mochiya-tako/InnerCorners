@@ -9,7 +9,7 @@
 | バージョン | InnerCorners GE v0.12.0 Beta 1候補 |
 | build | 71 |
 | ブランチ | `codex/gemini-integration` |
-| ソース状態 | Git管理済み、GitHubの非公開統合ブランチと同期済み |
+| ソース状態 | Git管理済み、公開GitHubリポジトリの統合ブランチと同期済み |
 | リポジトリ | `mochiya-tako/InnerCorners` |
 | 最低対象 | macOS 14 |
 | 現行配布CPU | Apple Silicon（arm64） |
@@ -80,7 +80,8 @@
 
 ## 5. 開発・配布上の状態
 
-- GitHubリポジトリは非公開である。
+- GitHubリポジトリは一般公開済み。Issuesは有効、WikiとDiscussionsは無効である。
+- MIT Licenseで公開し、著作権表示はGitHubアカウン名`mochiya-tako`とする。
 - RC7アプリは安定比較用プレリリースとしてダウンロード可能である。
 - GE Beta 1の統合ブランチ、タグ、プレリリース、アプリ／ソースZIPはGitHubと同期済み。
 - 現行ZIPはアドホック署名であり、一般利用者向けの公証済み配布物ではない。
