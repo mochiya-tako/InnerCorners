@@ -20,6 +20,12 @@ for item in .gitignore Assets Package.swift Packaging README.md Scripts Sources 
     fi
 done
 
+# Internal integration audit notes are retained in the development repository,
+# but are not part of the public source distribution.
+rm -f -- \
+    "${staging_root}/${archive_name}"/docs/*_BASELINE_AUDIT.md \
+    "${staging_root}/${archive_name}"/docs/*_INTEGRATION_PROGRESS.md
+
 xattr -cr "${staging_root}/${archive_name}"
 find "${staging_root}/${archive_name}" -name '.DS_Store' -delete
 find "${staging_root}/${archive_name}" -name '._*' -delete
