@@ -6,12 +6,16 @@
 
 | Download | ダウンロード | Link |
 | --- | --- | --- |
-| GE Beta 1 app — Apple Silicon | GE Beta 1アプリ — Apple Silicon | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
-| Stable comparison RC — Apple Silicon | 安定比較用RC — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
+| **Recommended: GE Beta 1 — Apple Silicon** | **推奨：GE Beta 1 — Apple Silicon** | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
+| Legacy comparison: RC7 — Apple Silicon | 旧版比較用：RC7 — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
 | All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
 | Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
 
 > [!IMPORTANT]
+> **GE Beta 1 is the recommended download for normal testing. RC7 is retained only as a legacy comparison and fallback.**
+>
+> **通常の試用にはGE Beta 1を推奨します。RC7は旧版との比較・切り分け用として残しています。**
+>
 > GE Beta 1 is a locally validated GitHub pre-release. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
 >
 > GE Beta 1はローカル検証済みのGitHubプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
