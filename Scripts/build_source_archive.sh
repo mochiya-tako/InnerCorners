@@ -14,7 +14,7 @@ trap cleanup EXIT
 
 mkdir -p "${staging_root}/${archive_name}" "${project_dir}/outputs"
 
-for item in .gitignore Assets LICENSE Package.swift Packaging README.md Scripts Sources Tests docs; do
+for item in .gitignore Assets LICENSE PRIVACY.md SECURITY.md CONTRIBUTING.md Package.swift Packaging README.md Scripts Sources Tests docs; do
     if [[ -e "${project_dir}/${item}" ]]; then
         cp -R "${project_dir}/${item}" "${staging_root}/${archive_name}/"
     fi

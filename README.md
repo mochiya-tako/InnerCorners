@@ -9,7 +9,7 @@
 | **Recommended: GE Beta 1 — Apple Silicon** | **推奨：GE Beta 1 — Apple Silicon** | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
 | Legacy comparison: RC7 — Apple Silicon | 旧版比較用：RC7 — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
 | All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
-| Source code (latest `main`) | 最新`main`のソースコード | [Download ZIP](https://github.com/mochiya-tako/InnerCorners/archive/refs/heads/main.zip) |
+| **Recommended Beta source** | **推奨Beta版ソース** | [Download source ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-source.zip) |
 
 > [!IMPORTANT]
 > **GE Beta 1 is the recommended download for normal testing. RC7 is retained only as a legacy comparison and fallback.**
@@ -123,6 +123,12 @@ This does not establish compatibility with every Mac, display, pointing device, 
 - Option-modified hot-corner assignments are intentionally unsupported because Option is reserved for emergency passage.
 - Disabling the screen saver remains unimplemented because no sufficiently safe public API equivalent has been confirmed.
 
+### Privacy and feedback
+
+InnerCorners contains no analytics, advertising, telemetry, account system, or network client. Settings and diagnostics remain on the Mac; see the bilingual [Privacy Policy](PRIVACY.md) for details.
+
+Use [GitHub Issues](https://github.com/mochiya-tako/InnerCorners/issues) for ordinary bugs and feature requests. Report vulnerabilities or confidential pointer-safety problems privately as described in the [Security Policy](SECURITY.md). Contributions are welcome under the safety guidance in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### License
 
 InnerCorners is available under the [MIT License](LICENSE).
@@ -227,6 +233,12 @@ GE Beta 1 build 71は90件の自動テストに合格し、Apple Silicon Mac・m
 - macOS 14、15、26では現行試験環境と同等の実アクション試験を行っていない
 - Optionは緊急通過に予約しているため、Option付きホットコーナー割当には非対応
 - 十分安全な公開APIを確認できていないため、スクリーンセーバ無効化は未実装
+
+### プライバシーとフィードバック
+
+InnerCornersには、解析、広告、テレメトリ、アカウント機能、ネットワーク通信機能はありません。設定と診断情報はMac内に留まります。詳しくは日英併記の[プライバシーポリシー](PRIVACY.md)を参照してください。
+
+通常の不具合や機能要望は[GitHub Issues](https://github.com/mochiya-tako/InnerCorners/issues)で受け付けます。脆弱性や非公開にすべきカーソル安全性の問題は、[セキュリティポリシー](SECURITY.md)に従って非公開で報告してください。貢献時の安全上の注意は[CONTRIBUTING.md](CONTRIBUTING.md)に記載しています。
 
 ### ライセンス
 

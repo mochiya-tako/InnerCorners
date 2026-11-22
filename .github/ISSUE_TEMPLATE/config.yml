@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security report
+    url: https://github.com/mochiya-tako/InnerCorners/security/advisories/new
+    about: Report vulnerabilities or confidential pointer-safety issues privately.
+  - name: Recommended Beta release
+    url: https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.12.0-beta.1
+    about: Download the current recommended build and read its limitations.
