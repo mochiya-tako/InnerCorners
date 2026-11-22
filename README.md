@@ -20,6 +20,12 @@
 >
 > どちらもアドホック署名で公証済みではありません。リリースノートを確認し、緊急通過と緊急終了を利用できる状態で試用してください。
 
+## Screenshots / スクリーンショット
+
+| Japanese / 日本語 | English / 英語 |
+| --- | --- |
+| <img src="docs/images/settings-ja.png" alt="InnerCorners GE settings in Japanese" width="440"> | <img src="docs/images/settings-en.png" alt="InnerCorners GE settings in English" width="440"> |
+
 ## English
 
 InnerCorners is an experimental macOS menu bar app that makes the inner corners of multi-display layouts behave more like native outer hot corners. It places short, directional cursor barriers at display junctions and can run a separate action for each display and corner.
