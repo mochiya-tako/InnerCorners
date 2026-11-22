@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest a focused improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the workflow or limitation rather than only the proposed control.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: layout
+    attributes:
+      label: Relevant display layout
+      description: Include the display arrangement and corner if relevant.
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and fallback considerations
+      description: Explain how the pointer should remain recoverable if the feature fails.

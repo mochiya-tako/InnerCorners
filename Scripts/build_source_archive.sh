@@ -2,7 +2,7 @@
 set -euo pipefail
 
 project_dir="${0:A:h:h}"
-version="v0.11.0-rc.7"
+version="GE-v0.12.0-beta.1-build71"
 archive_name="InnerCorners-${version}-source"
 output_path="${project_dir}/outputs/${archive_name}.zip"
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/innercorners-source.XXXXXX")"
@@ -12,15 +12,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "${staging_root}/${archive_name}"
-git -C "${project_dir}" archive HEAD | tar -x -C "${staging_root}/${archive_name}"
-rm -rf -- "${staging_root}/${archive_name}/outputs"
+mkdir -p "${staging_root}/${archive_name}" "${project_dir}/outputs"
 
-mkdir -p "${staging_root}/${archive_name}/docs"
-cp "${project_dir}/outputs/InnerCorners_GitHub公開・機能拡張計画.md" \
-   "${staging_root}/${archive_name}/docs/ROADMAP.md"
-cp "${project_dir}/outputs/InnerCorners_OS別ホットコーナーアクション調査.md" \
-   "${staging_root}/${archive_name}/docs/HOT_CORNER_SURVEY.md"
+for item in .gitignore Assets LICENSE PRIVACY.md SECURITY.md CONTRIBUTING.md Package.swift Packaging README.md Scripts Sources Tests docs; do
+    if [[ -e "${project_dir}/${item}" ]]; then
+        cp -R "${project_dir}/${item}" "${staging_root}/${archive_name}/"
+    fi
+done
+
+# Internal integration audit notes are retained in the development repository,
+# but are not part of the public source distribution.
+rm -f -- \
+    "${staging_root}/${archive_name}"/docs/*_BASELINE_AUDIT.md \
+    "${staging_root}/${archive_name}"/docs/*_INTEGRATION_PROGRESS.md
+
+xattr -cr "${staging_root}/${archive_name}"
+find "${staging_root}/${archive_name}" -name '.DS_Store' -delete
+find "${staging_root}/${archive_name}" -name '._*' -delete
 
 rm -f -- "${output_path}"
 (
@@ -29,3 +37,4 @@ rm -f -- "${output_path}"
 )
 
 echo "Created ${output_path}"
+shasum -a 256 "${output_path}"
