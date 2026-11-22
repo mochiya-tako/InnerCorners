@@ -20,6 +20,12 @@
 >
 > GE Beta 1はローカル検証済みのGitHubプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
 
+## Screenshots / スクリーンショット
+
+| Japanese / 日本語 | English / 英語 |
+| --- | --- |
+| <img src="docs/images/settings-ja.png" alt="InnerCorners GE settings in Japanese" width="440"> | <img src="docs/images/settings-en.png" alt="InnerCorners GE settings in English" width="440"> |
+
 ## English
 
 InnerCorners is an experimental macOS menu bar app that makes the inner corners of multi-display layouts behave more like native outer hot corners. It places short, directional cursor barriers at display junctions and can run a separate action for each display and corner.
