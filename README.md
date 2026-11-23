@@ -1,30 +1,41 @@
-# InnerCorners GE v0.12.0 Beta 1
+# InnerCorners
 
 [English](#english) | [日本語](#日本語)
+
+**Inner hot corners and cursor barriers for multi-display macOS.**
+
+![InnerCorners for macOS showing two adjacent displays and cursor barriers at their shared inner corners](docs/images/social-preview.png)
+
+On a multi-monitor Mac, the pointer can pass through the corners where adjacent displays meet. Those junctions do not provide the hard outer edge that makes a native macOS Hot Corner easy to hit. InnerCorners adds short, directional cursor barriers at display junctions and lets each display corner trigger its own action.
+
+Use it to make Mission Control, App Exposé, Show Desktop, Quick Note, Shortcuts, and other actions reachable from the inner corners of two- and three-display layouts. Hold Option to pass through a barrier temporarily.
+
+> [!WARNING]
+> InnerCorners is an experimental beta, not a finished public release. It requires Accessibility permission because it monitors and constrains pointer movement. The current download is for Apple Silicon, is ad-hoc signed, and is not notarized. Keep the Option-key bypass and emergency quit shortcut available while testing.
 
 ## Download / ダウンロード
 
 | Download | ダウンロード | Link |
 | --- | --- | --- |
-| **Recommended: GE Beta 1 — Apple Silicon** | **推奨：GE Beta 1 — Apple Silicon** | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
+| **Recommended: Beta 1 — Apple Silicon** | **推奨：Beta 1 — Apple Silicon** | [Download Beta 1 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip) |
 | Legacy comparison: RC7 — Apple Silicon | 旧版比較用：RC7 — Apple Silicon | [Download RC7 ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.11.0-rc.7/InnerCorners-v0.11.0-rc.7-arm64.app.zip) |
 | All releases | すべてのリリース | [GitHub Releases](https://github.com/mochiya-tako/InnerCorners/releases) |
 | **Recommended Beta source** | **推奨Beta版ソース** | [Download source ZIP](https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-source.zip) |
 
 > [!IMPORTANT]
-> **GE Beta 1 is the recommended download for normal testing. RC7 is retained only as a legacy comparison and fallback.**
+> **Beta 1 is the recommended download for normal testing. RC7 is retained only as a legacy comparison and fallback.**
 >
-> **通常の試用にはGE Beta 1を推奨します。RC7は旧版との比較・切り分け用として残しています。**
+> **通常の試用にはBeta 1を推奨します。RC7は旧版との比較・切り分け用として残しています。**
 >
-> GE Beta 1 is a locally validated GitHub pre-release. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
+> Beta 1 is a locally validated GitHub pre-release. It is ad-hoc signed and has not been notarized or tested on another Mac. Review the release notes and keep the emergency bypass and quit paths available while testing.
 >
-> GE Beta 1はローカル検証済みのGitHubプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
+> Beta 1はローカル検証済みのGitHubプレリリースです。アドホック署名で、公証および別のMacでの動作確認は未完了です。リリースノートを確認し、試用中は緊急通過と緊急終了を利用できる状態にしてください。
 
 ## Screenshots / スクリーンショット
 
 | Japanese / 日本語 | English / 英語 |
 | --- | --- |
-| <img src="docs/images/settings-ja.png" alt="InnerCorners GE settings in Japanese" width="440"> | <img src="docs/images/settings-en.png" alt="InnerCorners GE settings in English" width="440"> |
+| <img src="docs/images/settings-ja.png" alt="InnerCornersの日本語設定画面。2台のディスプレイと接合部のカーソル壁を表示" width="440"> | <img src="docs/images/settings-en.png" alt="InnerCorners macOS settings showing two displays and cursor barriers at their shared junction" width="440"> |
 
 ## English
 

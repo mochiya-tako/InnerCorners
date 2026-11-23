@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mochiya-tako.github.io/InnerCorners/sitemap.xml

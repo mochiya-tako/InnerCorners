@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InnerCorners — Inner hot corners for multi-display macOS</title>
+  <meta name="description" content="InnerCorners adds directional cursor barriers and per-display actions to the inner corners where macOS displays meet.">
+  <link rel="canonical" href="https://mochiya-tako.github.io/InnerCorners/">
+  <meta name="theme-color" content="#0c2135">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="InnerCorners — Inner hot corners for multi-display macOS">
+  <meta property="og:description" content="Stop at the junction. Trigger the corner. InnerCorners adds cursor barriers and per-display actions where Mac displays meet.">
+  <meta property="og:url" content="https://mochiya-tako.github.io/InnerCorners/">
+  <meta property="og:image" content="https://mochiya-tako.github.io/InnerCorners/images/social-preview.png">
+  <meta property="og:image:alt" content="InnerCorners settings showing two adjacent macOS displays and cursor barriers at their shared corners">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="images/social-preview.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "InnerCorners",
+    "description": "A macOS menu bar utility that adds directional cursor barriers and per-display actions to inner corners at multi-display junctions.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "macOS 14 or later",
+    "softwareVersion": "0.12.0-beta.1",
+    "isAccessibleForFree": true,
+    "license": "https://github.com/mochiya-tako/InnerCorners/blob/main/LICENSE",
+    "codeRepository": "https://github.com/mochiya-tako/InnerCorners",
+    "downloadUrl": "https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.12.0-beta.1",
+    "screenshot": "https://mochiya-tako.github.io/InnerCorners/images/settings-en.png",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="InnerCorners home">InnerCorners</a>
+    <nav aria-label="Primary navigation">
+      <a href="#how-it-works">How it works</a>
+      <a href="#safety">Safety</a>
+      <a href="#faq">FAQ</a>
+      <a href="#japanese">日本語</a>
+      <a href="https://github.com/mochiya-tako/InnerCorners">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">Open-source macOS utility</p>
+        <h1>Inner hot corners for multi-display macOS</h1>
+        <p class="lede">Stop at the junction. Trigger the corner. InnerCorners adds short, directional cursor barriers where adjacent displays meet, then lets each display corner run its own action.</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/mochiya-tako/InnerCorners/releases/download/v0.12.0-beta.1/InnerCorners-GE-v0.12.0-beta.1-build71-arm64.app.zip">Download Beta 1</a>
+          <a class="button secondary" href="https://github.com/mochiya-tako/InnerCorners">View source</a>
+        </div>
+        <p class="fine-print">Experimental beta · Apple Silicon · macOS 14+ · Accessibility permission required · Ad-hoc signed and not notarized</p>
+      </div>
+      <img class="hero-image" src="images/social-preview.png" alt="InnerCorners for macOS showing two adjacent displays and active cursor barriers at their shared inner corners" width="1280" height="640">
+    </section>
+
+    <section class="problem" aria-labelledby="problem-title">
+      <div>
+        <p class="eyebrow">The problem</p>
+        <h2 id="problem-title">A shared corner is easy to pass through</h2>
+      </div>
+      <p>At the junction between two Mac displays, the pointer can continue onto the next screen. That junction does not provide the hard outer edge that makes a native Hot Corner easy to hit. InnerCorners creates a small directional barrier at the junction so the inner corner becomes a reliable target.</p>
+    </section>
+
+    <section id="how-it-works" class="section">
+      <p class="eyebrow">How it works</p>
+      <h2>Three simple behaviors</h2>
+      <div class="cards">
+        <article>
+          <span class="step">01</span>
+          <h3>Stop at the junction</h3>
+          <p>A configurable 10–100 pt soft barrier catches the pointer at an inner display corner.</p>
+        </article>
+        <article>
+          <span class="step">02</span>
+          <h3>Trigger an action</h3>
+          <p>Assign a separate action and dwell time to each display corner, including overlapping junctions.</p>
+        </article>
+        <article>
+          <span class="step">03</span>
+          <h3>Pass through safely</h3>
+          <p>Hold Option to bypass barriers temporarily. An independent emergency shortcut disables barriers and quits.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="screenshot-section" aria-labelledby="settings-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Per-display control</p>
+          <h2 id="settings-title">See the display layout you are configuring</h2>
+        </div>
+        <p>Choose a display and corner, then set its barrier policy, action, modifier requirement, and dwell time.</p>
+      </div>
+      <img src="images/settings-en.png" alt="InnerCorners settings on macOS showing a two-display layout and controls for the selected bottom-right corner" width="2024" height="1680" loading="lazy">
+    </section>
+
+    <section class="section split">
+      <div>
+        <p class="eyebrow">Actions</p>
+        <h2>Use familiar macOS actions</h2>
+      </div>
+      <ul class="feature-list">
+        <li>Follow the corresponding macOS Hot Corners setting</li>
+        <li>Mission Control, App Exposé, Show Desktop, Apps, and Quick Note</li>
+        <li>Notification Center, Lock Screen, Screen Saver, and Display Sleep</li>
+        <li>Capture Selection or open the Screenshot Toolbar</li>
+        <li>Open an application or run a Shortcut</li>
+      </ul>
+    </section>
+
+    <section id="safety" class="section safety">
+      <div>
+        <p class="eyebrow">Safety first</p>
+        <h2>A pointer barrier needs an exit</h2>
+      </div>
+      <div>
+        <p>InnerCorners reserves Option as a temporary bypass. Control–Option–Command–Q independently disables barriers, saves that state, and quits. Barriers also wait before returning after sleep or a real display change.</p>
+        <p><strong>Current limitations:</strong> the beta is ad-hoc signed and not notarized. It has not been validated on another Mac, Sidecar, or sustained 1000 Hz-class pointer input. Long-duration CPU and memory behavior has not been measured.</p>
+        <p><a href="https://github.com/mochiya-tako/InnerCorners/blob/main/SECURITY.md">Read the security policy</a> · <a href="https://github.com/mochiya-tako/InnerCorners/blob/main/PRIVACY.md">Read the privacy policy</a></p>
+      </div>
+    </section>
+
+    <section id="faq" class="section faq">
+      <p class="eyebrow">FAQ</p>
+      <h2>Before you try the beta</h2>
+      <details>
+        <summary>Does InnerCorners replace macOS Hot Corners?</summary>
+        <p>No. An outer corner can be left to macOS. At an inner corner, InnerCorners can follow the corresponding macOS Hot Corners setting or run another supported action.</p>
+      </details>
+      <details>
+        <summary>Does it work with multiple monitors?</summary>
+        <p>Beta 1 has been tested with two- and three-display layouts, including L-shaped and mirrored arrangements. That testing does not establish compatibility with every display, pointing device, or layout.</p>
+      </details>
+      <details>
+        <summary>Why does it need Accessibility permission?</summary>
+        <p>The permission is required because the app monitors and constrains pointer movement and uses synthetic input paths for some actions.</p>
+      </details>
+      <details>
+        <summary>Does it support Intel Macs?</summary>
+        <p>The current downloadable build is for Apple Silicon (arm64). An Intel build has not been provided or verified.</p>
+      </details>
+      <details>
+        <summary>Is the beta signed and notarized?</summary>
+        <p>It is ad-hoc signed and not notarized. Review the release notes and keep both emergency exit paths available while testing.</p>
+      </details>
+    </section>
+
+    <section id="japanese" class="section japanese" lang="ja">
+      <p class="eyebrow">日本語</p>
+      <h2>マルチディスプレイ接合部を、使える内側ホットコーナーに</h2>
+      <p>InnerCornersは、macOSの隣接ディスプレイ接合部に短い方向別カーソル壁を設け、画面ごとの内側コーナーからアクションを実行できるようにする実験的なメニューバーアプリです。Optionキーを押している間は壁を一時通過できます。</p>
+      <p>現在のBeta 1はApple Silicon・macOS 14以降向けです。アクセシビリティ権限が必要で、アドホック署名・未公証です。試用前に<a href="https://github.com/mochiya-tako/InnerCorners#日本語">日本語READMEの安全設計と既知の制限</a>を確認してください。</p>
+    </section>
+
+    <section class="cta">
+      <div>
+        <p class="eyebrow">Experimental beta</p>
+        <h2>Try it with the emergency exits ready</h2>
+      </div>
+      <div class="actions">
+        <a class="button primary" href="https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.12.0-beta.1">Read the release notes</a>
+        <a class="button secondary" href="https://github.com/mochiya-tako/InnerCorners/issues">Report an issue</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>InnerCorners is open source under the MIT License.</p>
+    <p><a href="https://github.com/mochiya-tako/InnerCorners">GitHub</a> · <a href="https://github.com/mochiya-tako/InnerCorners/releases">Releases</a> · <a href="https://github.com/mochiya-tako/InnerCorners/blob/main/LICENSE">License</a></p>
+  </footer>
+</body>
+</html>
