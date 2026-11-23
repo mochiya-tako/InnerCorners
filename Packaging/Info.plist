@@ -4,22 +4,24 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>ja</string>
+    <key>CFBundleDisplayName</key>
+    <string>InnerCorners GE</string>
     <key>CFBundleExecutable</key>
     <string>InnerCorners</string>
     <key>CFBundleIdentifier</key>
-    <string>local.prototype.InnerCorners</string>
+    <string>local.prototype.InnerCorners.GE</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
     <key>CFBundleName</key>
-    <string>InnerCorners</string>
+    <string>InnerCorners GE</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-		<string>0.11.0</string>
+    <string>0.12.0</string>
     <key>CFBundleVersion</key>
-	<string>54</string>
+    <string>71</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>LSUIElement</key>

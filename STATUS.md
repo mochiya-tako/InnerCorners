@@ -1,23 +1,23 @@
 # InnerCorners 現在の開発状況
 
-基準日: 2026-11-19（JST）
+基準日: 2026-11-20（JST）
 
 ## 1. 現在地
 
 | 項目 | 状況 |
 | --- | --- |
-| バージョン | v0.11.0 RC7 |
-| build | 54 |
-| ブランチ | `main` |
-| ソース状態 | Git管理、GitHub非公開リポジトリと同期 |
+| バージョン | InnerCorners GE v0.12.0 Beta 1候補 |
+| build | 71 |
+| ブランチ | `codex/gemini-integration` |
+| ソース状態 | Git管理済み、公開GitHubリポジトリの統合ブランチと同期済み |
 | リポジトリ | `mochiya-tako/InnerCorners` |
 | 最低対象 | macOS 14 |
 | 現行配布CPU | Apple Silicon（arm64） |
 | 署名 | アドホック署名 |
 | 公証 | 未実施 |
-| 公開区分 | プレリリース／個人試用段階 |
+| 公開区分 | ローカル検証済みbeta候補／個人試用段階 |
 
-最新版アプリはGitHub Releasesの[`v0.11.0-rc.7`](https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.11.0-rc.7)に置かれている。リポジトリが非公開の間は、権限のあるGitHubアカウントだけが取得できる。
+安定比較版RC7はGitHub Releasesの[`v0.11.0-rc.7`](https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.11.0-rc.7)に置かれている。GE Beta 1は[`v0.12.0-beta.1`](https://github.com/mochiya-tako/InnerCorners/releases/tag/v0.12.0-beta.1)としてプレリリース済み。
 
 ## 2. 実装済み
 
@@ -32,6 +32,10 @@
 - ディスプレイ・角ごとのアクション設定。
 - Mission Control、Application Windows、Show Desktop、Apps／Launchpad、クイックメモ、通知センター、画面ロック、スクリーンセーバ開始、ディスプレイスリープ。
 - 外周の標準設定をmacOSへ委譲し、二重トグルを回避。
+- コーナー別の壁有効／壁のみ／通過、修飾キー条件、スピードバンプ。
+- 一時停止、除外アプリ、フルスクリーン時の抑制範囲設定。
+- 選択範囲撮影、スクリーンショットツールバー、アプリ起動、ショートカット実行。
+- 別コーナー衝突による表示中ワークスペース機能のキャンセル。
 - プライバシーを抑えた統合ログとGUI診断表示。
 - 重複起動防止、Dock／Command–Tab表示、通常のCommand–Q終了。
 - アプリZIPと公開用ソースZIPの生成スクリプト。
@@ -49,13 +53,13 @@
 - 画面切断、再接続、解像度・配置変更。
 - 通常のスリープ／復帰。
 - Option通過、緊急終了、通常終了。
-- 上記の選択可能アクションと、主要な再衝突キャンセル。
+- 上記の選択可能アクションと、ワークスペース4機能の全方向キャンセル。
 - 物理US配列キーボードでクイックメモと通知センター。
 
 ### 自動・静的検査
 
 - 幾何計算、所有判定、ラッチ、安全ゲート、設定、Dock値、修飾キー、アクション結果の単体テストを収録。
-- Swift 6の警告をエラーとして扱うコンパイル検査に合格した履歴あり。
+- Swift 6の警告をエラーとして扱うコンパイル検査と90件のXCTestに合格。
 - 配布ZIPの展開、アプリ版番号、アドホック署名の検証済み成果物をRC7として保存。
 - 2026-11-19、Command Line Toolsを27.2としてクリーン再導入。Swift 6.4.2とmacOS SDK 27.2で、`swift build -c release`および`Scripts/build_app.sh`が成功し、アプリ本体、アドホック署名、ZIP再展開後の署名を確認した。
 - 同日、Xcode 27.2（build 27B52）を導入し、`/Applications/Xcode.app/Contents/Developer`を既定の開発者ディレクトリへ設定。ASM右下の厳密角テストにあった座標誤りを訂正後、通常の`swift test`でXCTest 60件すべてに合格した。製品コードの変更はない。
@@ -64,7 +68,7 @@
 
 ## 4. 現在の既知制限
 
-- 長時間のCPU・メモリ測定は未実施。
+- 長時間のCPU・メモリ測定は未実施（短時間の無効待機0.0%は確認済み）。
 - 1000 Hz級マウスの持続衝突負荷は未実施。
 - Sidecarは未検証。
 - macOS 14、15、26は現行機と同等の実機試験をしていない。
@@ -76,8 +80,10 @@
 
 ## 5. 開発・配布上の状態
 
-- GitHubリポジトリは非公開である。
-- RC7アプリはプレリリースとしてダウンロード可能である。
+- GitHubリポジトリは一般公開済み。Issuesは有効、WikiとDiscussionsは無効である。
+- MIT Licenseで公開し、著作権表示はGitHubアカウン名`mochiya-tako`とする。
+- RC7アプリは安定比較用プレリリースとしてダウンロード可能である。
+- GE Beta 1の統合ブランチ、タグ、プレリリース、アプリ／ソースZIPはGitHubと同期済み。
 - 現行ZIPはアドホック署名であり、一般利用者向けの公証済み配布物ではない。
 - App Store公開は予定せず、将来公開する場合もGitHub Releasesを主経路とする方針である。
 - ソースアーカイブは`Scripts/build_source_archive.sh`、アプリは`Scripts/build_app.sh`から生成する。
@@ -86,16 +92,19 @@
 
 通常使用によるバグ取りを優先する。問題が見つからない期間に、次を順次進める。
 
-1. 長時間常駐時のCPU・メモリと、イベントタップ停止の有無を記録する。
-2. 1000 Hz級マウス、Sidecar、別Mac、旧対応macOSの検証環境を確保する。
-3. 公開時にDeveloper ID署名・公証を行い、Gatekeeper有効の別Macで確認する。
-4. 上記結果と既知制限を反映して、RC表記を外すか判断する。
+1. beta向けREADME、CHANGELOG、REVIEW、STATUSと生成物名を最終確認する。
+2. クリーンビルド、90件のテスト、アプリ／ソースZIPの再現性を確認する。
+3. Beta 1の通常使用でバグを記録し、必要な修正は次のbeta候補として分離する。
+4. `main`への統合はbeta公開・追加試用とは分けて判断する。
+5. 長時間常駐CPU・メモリ、1000 Hz級マウス、Sidecar、別Mac、旧対応macOSを順次検証する。
+6. 一般公開段階ではDeveloper ID署名・公証を行い、Gatekeeper有効の別Macで確認する。
 
 ## 7. 関連文書
 
 - [DESIGN.md](DESIGN.md) — 設計思想・仕様
 - [CHANGELOG.md](CHANGELOG.md) — 版ごとの開発履歴
 - [REVIEW.md](REVIEW.md) — レビュー結果と未解決事項
+- [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) — 今後の開発方針と段階的統合計画
 - [README.md](README.md) — 利用者向け概要・ダウンロード
 - [日本語の詳細開発履歴](docs/DEVELOPMENT_HISTORY_JA.md)
 - [English development summary](docs/DEVELOPMENT_HISTORY_EN.md)

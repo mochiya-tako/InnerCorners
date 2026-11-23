@@ -17,6 +17,29 @@ private let cursorBarrierCallback: CGEventTapCallBack = { _, type, event, userIn
 
 @MainActor
 final class CursorBarrierController {
+    private enum SafetyRearmReason {
+        case wake
+        case displayChange
+
+        func localizedTitle(language: AppLanguage) -> String {
+            switch self {
+            case .wake:
+                L10n.text(language, ja: "スリープ復帰", en: "wake")
+            case .displayChange:
+                L10n.text(language, ja: "画面構成変更", en: "display configuration change")
+            }
+        }
+
+        func localizedBanner(language: AppLanguage) -> String {
+            let reason = localizedTitle(language: language)
+            return L10n.text(
+                language,
+                ja: "\(reason)後の安全確認中：画面内へ移動すると壁を再開します",
+                en: "Safety check after \(reason): move inside a display to restore the barrier"
+            )
+        }
+    }
+
     private let logger = Logger(subsystem: "local.prototype.InnerCorners", category: "CursorBarrier")
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
@@ -30,7 +53,10 @@ final class CursorBarrierController {
     private var approachDisplayID: UInt32?
     private var reactivationGate = CollisionReactivationGate()
     private var safetyGate = BarrierSafetyGate()
-    private var safetyStatusMessage: String?
+    private var speedBumpGate = SpeedBumpGate()
+    private var activeSafetyReason: SafetyRearmReason?
+    private var passThroughMode: BarrierPassThroughMode = .alwaysBlock
+    private var speedBumpHoldDuration: TimeInterval = 0.30
     private(set) var isEventTapActive = false
     private var language: AppLanguage = .japanese
     // The combined session source owns the suppression policy used by cursor
@@ -41,7 +67,8 @@ final class CursorBarrierController {
 
     var onStatus: ((String) -> Void)?
     var onBarrierCount: ((Int) -> Void)?
-    var onCollision: ((CursorBarrier, UInt32) -> Void)?
+    var onCollision: ((CursorBarrier, UInt32, CGEventFlags) -> Void)?
+    var onBarrierHit: ((CursorBarrier) -> Void)?
     var onSafetyEvent: ((String) -> Void)?
     var onEventTapStateChange: ((Bool) -> Void)?
 
@@ -59,24 +86,39 @@ final class CursorBarrierController {
         enabled: Bool,
         length: CGFloat,
         displays: [QuartzDisplayDescriptor],
+        disabledCornerKeys: Set<String> = [],
+        passThroughMode: BarrierPassThroughMode = .alwaysBlock,
+        speedBumpHoldMilliseconds: Double = 300,
+        preserveSafetyStateWhenDisabled: Bool = false,
         language: AppLanguage
     ) {
         self.language = language
+        if self.passThroughMode != passThroughMode {
+            self.passThroughMode = passThroughMode
+            speedBumpGate.reset()
+        }
+        self.speedBumpHoldDuration = max(0.05, speedBumpHoldMilliseconds / 1_000)
+
         if enabled {
-            // Mission Control transitions can briefly report no active displays.
-            // Keep the last valid wall set instead of dropping and rearming it.
+            let previousDisplays = self.displays
             if !displays.isEmpty {
                 self.displays = displays
-                barriers = CursorBarrierGeometry.barriers(for: displays, length: length)
+                barriers = CursorBarrierGeometry.barriers(
+                    for: displays,
+                    length: length,
+                    disabledCornerKeys: disabledCornerKeys
+                )
                 if let id = approachDisplayID, !displays.contains(where: { $0.id == id }) {
                     approachDisplayID = nil
                 }
             }
-            synchronizePointerState()
+            if tap == nil || previousLocation == nil || !CursorBarrierGeometry.sameDisplayConfiguration(previousDisplays, self.displays) {
+                synchronizePointerState()
+            }
             onBarrierCount?(barriers.count)
             start()
         } else {
-            stop()
+            stop(preservingSafetyState: preserveSafetyStateWhenDisabled)
             onBarrierCount?(0)
             onStatus?(barrierStatus(L10n.text(language, ja: "停止中", en: "Stopped")))
         }
@@ -94,21 +136,19 @@ final class CursorBarrierController {
         cooldownUntil = 0
         approachDisplayID = nil
         reactivationGate.reset()
+        speedBumpGate.reset()
         if !preservingSafetyState {
             safetyGate.reset()
-            safetyStatusMessage = nil
+            activeSafetyReason = nil
         }
     }
 
-    /// Sleep/wake can place the pointer exactly on a rebuilt display junction.
-    /// Do not restore walls until the delay has elapsed and the user has moved
-    /// to an unambiguous point safely inside one display.
     func prepareForWake() {
-        prepareForReconfiguration(reason: L10n.text(language, ja: "スリープ復帰", en: "wake"))
+        prepareForReconfiguration(reason: .wake)
     }
 
     func prepareForDisplayChange() {
-        prepareForReconfiguration(reason: L10n.text(language, ja: "画面構成変更", en: "display configuration change"))
+        prepareForReconfiguration(reason: .displayChange)
     }
 
     func pauseForPotentialDisplayChange() {
@@ -116,21 +156,23 @@ final class CursorBarrierController {
         onStatus?(barrierStatus(L10n.text(language, ja: "画面構成を確認中", en: "Checking display configuration")))
     }
 
-    private func prepareForReconfiguration(reason: String) {
+    private func prepareForReconfiguration(reason: SafetyRearmReason) {
         clearTransientBarrierState()
+        activeSafetyReason = reason
         safetyGate.requireSafeRearm(
             now: ProcessInfo.processInfo.systemUptime,
             delay: wakeRearmDelay
         )
-        announceSafety(L10n.text(
-            language,
-            ja: "\(reason)後の安全確認中：画面内へ移動すると壁を再開します",
-            en: "Safety check after \(reason): move inside a display to restore the barrier"
-        ))
+        announceSafety(reason.localizedBanner(language: language))
     }
 
     fileprivate func reenableTap() {
         if let tap {
+            // The pointer may have moved while the event tap was disabled. A
+            // stale previousLocation would turn the first recovered event into
+            // a fictitious long movement crossing one or more barriers.
+            clearTransientBarrierState()
+            synchronizePointerState()
             CGEvent.tapEnable(tap: tap, enable: true)
             reportRunningStatus()
         }
@@ -141,8 +183,7 @@ final class CursorBarrierController {
         let proposed = event.location
         let now = ProcessInfo.processInfo.systemUptime
 
-        // This is deliberately checked before every wall decision.  It is a
-        // keyboard-only escape route that does not depend on cursor position.
+        // Keyboard-only escape route checked before every wall decision.
         let globalFlags = CGEventSource.flagsState(.combinedSessionState)
         if event.flags.contains(.maskAlternate) || globalFlags.contains(.maskAlternate) {
             clearTransientBarrierState()
@@ -169,6 +210,7 @@ final class CursorBarrierController {
             }
             return
         case .rearmed:
+            activeSafetyReason = nil
             self.previousLocation = proposed
             updateApproachDisplay(at: proposed)
             announceSafety(L10n.text(
@@ -176,6 +218,7 @@ final class CursorBarrierController {
                 ja: "安全な画面内位置を確認：接合部バリアを再開しました",
                 en: "Safe on-screen position confirmed: barrier restored"
             ))
+            reportRunningStatus()
             return
         case .active:
             break
@@ -188,8 +231,6 @@ final class CursorBarrierController {
             updateApproachDisplay(at: proposed)
             return
         }
-        // Wall enforcement is independent from action latches and cooldowns.
-        // While enabled, every collision is constrained.
         let ownedBarriers = barriers.filter { $0.displayID == approachDisplayID }
         let collision = CursorBarrierGeometry.collision(
             from: previousLocation,
@@ -201,6 +242,20 @@ final class CursorBarrierController {
             barriers: ownedBarriers
         )
         if let collision {
+            let speedBumpDecision = speedBumpGate.evaluateCollision(
+                barrier: collision.barrier,
+                now: now,
+                mode: passThroughMode,
+                holdDuration: speedBumpHoldDuration
+            )
+            if speedBumpDecision == .allowPassage {
+                reactivationGate.reset()
+                releaseLatchIfNeeded(at: proposed)
+                updateApproachDisplay(at: proposed)
+                self.previousLocation = proposed
+                return
+            }
+
             let constrained = collision.point
             event.location = constrained
             let error = CGWarpMouseCursorPosition(constrained)
@@ -232,6 +287,10 @@ final class CursorBarrierController {
                 && reactivationGate.consumeReactivation(for: collision.barrier)
             if !sameLatchedJunction {
                 latchedBarrier = collision.barrier
+                let hitBarrier = collision.barrier
+                DispatchQueue.main.async { [weak self] in
+                    self?.onBarrierHit?(hitBarrier)
+                }
             }
             if type == .mouseMoved && !sameLatchedJunction && (!sameCoolingJunction || intentionalReactivation) {
                 cooldownBarrier = collision.barrier
@@ -239,12 +298,14 @@ final class CursorBarrierController {
                 reactivationGate.recordTrigger(collision.barrier)
                 let barrier = collision.barrier
                 let sourceDisplayID = approachDisplayID
+                let modifierFlagsAtCollision = event.flags.union(globalFlags)
                 DispatchQueue.main.async { [weak self] in
-                    self?.onCollision?(barrier, sourceDisplayID)
+                    self?.onCollision?(barrier, sourceDisplayID, modifierFlagsAtCollision)
                 }
             }
             self.previousLocation = constrained
         } else {
+            speedBumpGate.observeNonCollidingMovement(at: proposed, now: now)
             releaseLatchIfNeeded(at: proposed)
             if type == .mouseMoved {
                 reactivationGate.observeMovement(
@@ -283,10 +344,10 @@ final class CursorBarrierController {
         cooldownUntil = 0
         approachDisplayID = nil
         reactivationGate.reset()
+        speedBumpGate.reset()
     }
 
     private func announceSafety(_ message: String) {
-        safetyStatusMessage = message
         logger.notice("\(message, privacy: .public)")
         onStatus?(barrierStatus(message))
         DispatchQueue.main.async { [weak self] in
@@ -342,12 +403,17 @@ final class CursorBarrierController {
 
     private func reportRunningStatus() {
         if safetyGate.requiresSafeRearm {
-            onStatus?(barrierStatus(safetyStatusMessage ?? L10n.text(language, ja: "安全確認中", en: "Safety check in progress")))
+            let message = activeSafetyReason?.localizedBanner(language: language)
+                ?? L10n.text(language, ja: "安全確認中", en: "Safety check in progress")
+            onStatus?(barrierStatus(message))
         } else {
+            let modeLabel = passThroughMode == .speedBump
+                ? L10n.text(language, ja: "・スピードバンプ", en: " · Speed Bump")
+                : ""
             onStatus?(L10n.text(
                 language,
-                ja: "接合部ソフトバリア：有効（\(barriers.count)か所）",
-                en: "Junction Barrier: Active (\(barriers.count) locations)"
+                ja: "接合部ソフトバリア：有効（\(barriers.count)か所\(modeLabel)）",
+                en: "Junction Barrier: Active (\(barriers.count) locations\(modeLabel))"
             ))
         }
     }

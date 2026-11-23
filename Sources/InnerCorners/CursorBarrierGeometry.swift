@@ -26,6 +26,10 @@ struct CursorBarrier: Identifiable, Hashable {
     let span: ClosedRange<CGFloat>
     let ownerSide: BarrierOwnerSide
     let ownerFrame: CGRect
+
+    var cornerKey: String {
+        "\(displayID):\(corner.rawValue)"
+    }
 }
 
 struct CursorBarrierCollision: Equatable {
@@ -85,15 +89,14 @@ enum CursorBarrierGeometry {
 
     static func shouldReleaseLatch(at point: CGPoint, barrier: CursorBarrier, distance: CGFloat = 8) -> Bool {
         let junction = junctionPoint(of: barrier)
-        // Action re-arming and physical wall length are separate concepts.
-        // Requiring a retreat by the full 10...100 pt wall length makes a
-        // quick leave-and-return remain latched even though the pointer has
-        // clearly left the corner.  The wall stays active over its configured
-        // span; only the action latch uses this small junction distance.
         return abs(point.x - junction.x) > distance || abs(point.y - junction.y) > distance
     }
 
-    static func barriers(for displays: [QuartzDisplayDescriptor], length requestedLength: CGFloat) -> [CursorBarrier] {
+    static func barriers(
+        for displays: [QuartzDisplayDescriptor],
+        length requestedLength: CGFloat,
+        disabledCornerKeys: Set<String> = []
+    ) -> [CursorBarrier] {
         let length = min(max(requestedLength, 10), 100)
         var result: [CursorBarrier] = []
 
@@ -127,7 +130,8 @@ enum CursorBarrierGeometry {
                 result.append(horizontal(display, .bottomRight, y: f.maxY, span: (f.maxX - length)...(f.maxX + length), owner: .lowerCoordinate, edge: "bottom"))
             }
         }
-        return result
+        guard !disabledCornerKeys.isEmpty else { return result }
+        return result.filter { !disabledCornerKeys.contains($0.cornerKey) }
     }
 
     static func constrain(from previous: CGPoint, to proposed: CGPoint, barriers: [CursorBarrier], inset: CGFloat = 0.5) -> CGPoint {
@@ -135,12 +139,6 @@ enum CursorBarrierGeometry {
     }
 
     static func collision(from previous: CGPoint, to proposed: CGPoint, barriers: [CursorBarrier], inset: CGFloat = 0.5) -> CursorBarrierCollision? {
-        // Mouse hardware can report a fast diagonal gesture as a handful of
-        // coarse samples.  Without a small velocity-dependent allowance, one
-        // sample can cross the seam just beyond the configured span and the
-        // next sample can already be inside the adjacent display's corner.
-        // Cap the allowance so it only closes that sampling gap; it must not
-        // turn a short corner wall into a large section of the shared edge.
         let sampleDistance = hypot(proposed.x - previous.x, proposed.y - previous.y)
         let samplingPadding = min(12, max(0.5, sampleDistance * 0.1))
         for barrier in barriers {
@@ -210,10 +208,6 @@ enum CursorBarrierGeometry {
         return nil
     }
 
-    /// Detect arrival at the physical junction when WindowServer clamps the
-    /// pointer to an outer display edge. At an exact outer corner there may be
-    /// no coordinate beyond the seam, so the normal crossing test never sees
-    /// a crossing even though the user has deliberately hit the corner.
     static func cornerContact(
         from previous: CGPoint,
         to proposed: CGPoint,
@@ -231,9 +225,6 @@ enum CursorBarrierGeometry {
                 && abs(previous.y - junction.y) <= tolerance
             guard !previousAtJunction else { continue }
 
-            // The caller already filters by approach display. This additional
-            // frame check prevents a nearby point on another display from
-            // manufacturing a contact for the wrong owner.
             guard containsClosed(barrier.ownerFrame, previous) else { continue }
             guard approachesBoundary(from: previous, to: proposed, barrier: barrier) else { continue }
             return CursorBarrierCollision(
@@ -296,7 +287,7 @@ enum CursorBarrierGeometry {
         return abs(a.x - b.x) < 0.5 && abs(a.y - b.y) < 0.5
     }
 
-    private static func junctionPoint(of barrier: CursorBarrier) -> CGPoint {
+    static func junctionPoint(of barrier: CursorBarrier) -> CGPoint {
         let frame = barrier.ownerFrame
         switch barrier.corner {
         case .topLeft: return CGPoint(x: frame.minX, y: frame.minY)
@@ -317,11 +308,6 @@ enum CursorBarrierGeometry {
         return startSecondary + (endSecondary - startSecondary) * fraction
     }
 
-    /// Keep the collision strictly inside the owning display. Landing on an
-    /// exact shared/outer coordinate such as (0, 0) is ambiguous to
-    /// WindowServer, and a following high-speed hardware sample can be
-    /// attributed directly to the adjacent display. A half-point inset is
-    /// visually imperceptible but preserves an unambiguous owner.
     private static func clampToOwnerDisplay(_ point: CGPoint, barrier: CursorBarrier, inset: CGFloat) -> CGPoint {
         let f = barrier.ownerFrame
         return CGPoint(

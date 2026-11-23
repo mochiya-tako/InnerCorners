@@ -75,6 +75,44 @@ final class GeometryTests: XCTestCase {
         )
     }
 
+    func testDisabledCornerPolicyFiltersOutSpecificCornerBarrier() {
+        let lg = QuartzDisplayDescriptor(id: 1, name: "LG", frame: CGRect(x: 0, y: 0, width: 2560, height: 1080))
+        let asm = QuartzDisplayDescriptor(id: 3, name: "ASM", frame: CGRect(x: -1920, y: 0, width: 1920, height: 1080))
+        let allBarriers = CursorBarrierGeometry.barriers(for: [lg, asm], length: 40)
+        XCTAssertEqual(allBarriers.count, 4)
+
+        let filtered = CursorBarrierGeometry.barriers(
+            for: [lg, asm],
+            length: 40,
+            disabledCornerKeys: ["1:bottomLeft"]
+        )
+        XCTAssertEqual(filtered.count, 3)
+        XCTAssertFalse(filtered.contains { $0.displayID == 1 && $0.corner == .bottomLeft })
+    }
+
+    func testPreviewSegmentsReflectCornerPoliciesAndAxes() {
+        let lgAppKit = DisplayDescriptor(id: "uuid-lg", displayNumber: 1, name: "LG", frame: CGRect(x: 0, y: 0, width: 2560, height: 1080))
+        let asmAppKit = DisplayDescriptor(id: "uuid-asm", displayNumber: 3, name: "ASM", frame: CGRect(x: -1920, y: 0, width: 1920, height: 1080))
+        let lgQuartz = QuartzDisplayDescriptor(id: 1, name: "LG", frame: CGRect(x: 0, y: 0, width: 2560, height: 1080))
+        let asmQuartz = QuartzDisplayDescriptor(id: 3, name: "ASM", frame: CGRect(x: -1920, y: 0, width: 1920, height: 1080))
+
+        var prefs = Preferences()
+        prefs.setBarrierPolicy(.stopperOnly, displayID: "uuid-lg", corner: .topLeft)
+        prefs.setBarrierPolicy(.disabled, displayID: "uuid-lg", corner: .bottomLeft)
+
+        let structural = CursorBarrierGeometry.barriers(for: [lgQuartz, asmQuartz], length: 50)
+        let segments = HotZoneGeometry.previewSegments(
+            displays: [lgAppKit, asmAppKit],
+            allBarriers: structural,
+            length: 50,
+            preferences: prefs
+        )
+        XCTAssertEqual(segments.count, 4)
+        XCTAssertEqual(segments.first { $0.displayNumber == 1 && $0.corner == .topLeft }?.policy, .stopperOnly)
+        XCTAssertEqual(segments.first { $0.displayNumber == 1 && $0.corner == .bottomLeft }?.policy, .disabled)
+        XCTAssertEqual(segments.first { $0.displayNumber == 3 && $0.corner == .topRight }?.policy, .enabled)
+    }
+
     func testSystemActionAtOuterCornerIsLeftToMacOS() {
         XCTAssertFalse(HotZoneGeometry.shouldExecuteCustomAction(
             .systemHotCorner,
